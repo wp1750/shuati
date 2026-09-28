@@ -1,0 +1,7771 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>刷题应用</title>
+<style>
+  :root{
+    --green-900:#14532d; --green-700:#15803d; --green-600:#16a34a;
+    --green-100:#dcfce7; --green-50:#f0fdf4;
+    --ink:#1f2937; --sub:#6b7280; --line:#e5e7eb;
+    --red:#dc2626; --red-bg:#fee2e2; --amber:#d97706; --amber-bg:#fef3c7;
+    --bg:#f6f8f6; --card:#fff;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;padding:0;}
+  body{font-family:"PingFang SC","Microsoft YaHei","Noto Sans SC",system-ui,sans-serif;
+       background:var(--bg);color:var(--ink);font-size:15px;line-height:1.6;}
+  #app{max-width:560px;margin:0 auto;min-height:100vh;display:flex;flex-direction:column;}
+  header{position:sticky;top:0;z-index:10;background:var(--green-900);color:#fff;
+         padding:14px 16px 12px;}
+  header .t{font-size:17px;font-weight:700;}
+  header .s{font-size:12px;opacity:.75;}
+  main{flex:1;padding:14px 14px 110px;}
+  nav{position:fixed;bottom:0;left:0;right:0;z-index:10;background:#fff;
+      border-top:1px solid var(--line);display:flex;max-width:560px;margin:0 auto;}
+  nav button{flex:1;background:none;border:none;padding:10px 0;cursor:pointer;
+             font-size:13px;color:var(--sub);font-family:inherit;}
+  nav button.active{color:var(--green-700);font-weight:700;}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;
+        padding:15px;margin-bottom:12px;}
+  h1.page-title{font-size:20px;margin:2px 0 2px;color:var(--green-900);}
+  .subtitle{font-size:13px;color:var(--sub);margin:0 0 14px;}
+  .muted{font-size:12px;color:var(--sub);}
+  .sec-t{font-size:15px;font-weight:700;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;gap:8px;}
+  .empty{text-align:center;color:var(--sub);font-size:14px;padding:24px 0;}
+  /* 今日进度 */
+  .today-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;text-align:center;}
+  .today-cell{background:var(--bg);border-radius:10px;padding:12px 6px;}
+  .today-cell .num{font-size:22px;font-weight:800;color:var(--green-700);}
+  .today-cell .num.red{color:var(--red);}
+  .today-cell .lab{font-size:12px;color:var(--sub);margin-top:2px;}
+  /* 首页四入口 */
+  .entries{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  .entry{background:var(--card);border:1px solid var(--line);border-radius:14px;
+         padding:16px 14px;cursor:pointer;text-align:left;font-family:inherit;}
+  .entry .e-t{font-size:15px;font-weight:700;}
+  .entry .e-d{font-size:12px;color:var(--sub);margin-top:2px;}
+  .entry:active{border-color:var(--green-600);}
+  /* 列表项 */
+  .list-item{display:flex;gap:10px;align-items:center;background:var(--card);border:1px solid var(--line);
+             border-radius:12px;padding:10px 12px;cursor:pointer;margin-bottom:8px;width:100%;
+             text-align:left;font-family:inherit;}
+  .list-item .no{flex-shrink:0;width:30px;height:30px;border-radius:8px;background:var(--green-100);
+                 color:var(--green-900);font-weight:800;display:flex;align-items:center;justify-content:center;}
+  .list-item .txt{flex:1;font-size:14px;font-weight:600;color:var(--ink);}
+  /* 选项 */
+  .opt{display:flex;gap:10px;align-items:flex-start;width:100%;text-align:left;
+       background:var(--card);border:1.5px solid var(--line);border-radius:12px;padding:11px 13px;
+       font-family:inherit;font-size:15px;color:var(--ink);cursor:pointer;margin-bottom:8px;}
+  .opt:active{border-color:var(--green-600);}
+  .opt .k{flex-shrink:0;width:26px;height:26px;border-radius:50%;border:1.5px solid var(--line);
+          display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:var(--sub);}
+  .opt.sel{border-color:var(--green-600);background:var(--green-50);}
+  .opt.sel .k{border-color:var(--green-600);background:var(--green-600);color:#fff;}
+  .opt.right{border-color:var(--green-600);background:var(--green-100);}
+  .opt.right .k{border-color:var(--green-600);background:var(--green-600);color:#fff;}
+  .opt.wrong{border-color:var(--red);background:var(--red-bg);}
+  .opt.wrong .k{border-color:var(--red);background:var(--red);color:#fff;}
+  .opt.dis{pointer-events:none;}
+  .feedback{margin-top:4px;border-radius:10px;padding:10px 12px;font-size:14px;font-weight:600;}
+  .feedback.ok{background:var(--green-100);color:var(--green-900);}
+  .feedback.no{background:var(--red-bg);color:#991b1b;}
+  .q-head{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px;}
+  .badge{font-size:11px;padding:2px 8px;border-radius:20px;background:var(--green-100);color:var(--green-900);font-weight:600;}
+  .badge.multi{background:#e0f2fe;color:#075985;}
+  .badge.judge{background:var(--amber-bg);color:#92400e;}
+  .q-progress{font-size:12px;color:var(--sub);margin-left:auto;}
+  .q-stem{font-size:16px;font-weight:600;margin:0 0 12px;word-break:break-word;}
+  .q-actions{display:flex;gap:8px;margin-top:12px;}
+  .btn{flex:1;border:none;border-radius:12px;padding:12px;font-size:15px;font-weight:700;
+       cursor:pointer;font-family:inherit;}
+  .btn.pri{background:var(--green-700);color:#fff;}
+  .btn.ghost{background:var(--card);border:1.5px solid var(--line);color:var(--ink);}
+  .back-btn{display:block;width:100%;text-align:center;padding:12px;border:1.5px solid var(--line);
+            border-radius:12px;background:var(--card);color:var(--ink);font-size:15px;font-weight:700;
+            cursor:pointer;font-family:inherit;margin-top:4px;}
+  /* 工具栏 */
+  .toolbar{display:flex;gap:8px;margin-bottom:12px;}
+  .toolbar button{flex:1;background:var(--card);border:1.5px solid var(--line);border-radius:10px;
+                  padding:8px 4px;font-size:13px;color:var(--ink);cursor:pointer;font-family:inherit;}
+  .toolbar button.on{border-color:var(--amber);color:var(--amber);background:var(--amber-bg);}
+  /* 答题卡 */
+  .answer-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;}
+  .answer-grid button{aspect-ratio:1;border:1.5px solid var(--line);border-radius:8px;
+                      background:#fff;font-size:15px;font-weight:700;color:var(--ink);
+                      cursor:pointer;font-family:inherit;}
+  .answer-grid button:active{border-color:var(--green-600);}
+  .answer-grid button.ok{background:var(--green-100);border-color:var(--green-600);color:var(--green-900);}
+  .answer-grid button.no{background:var(--red-bg);border-color:var(--red);color:#991b1b;}
+  /* 模拟考试 */
+  .timer{font-variant-numeric:tabular-nums;color:var(--red);font-weight:700;font-size:15px;}
+  .hist-item{display:flex;align-items:center;gap:10px;background:var(--card);border:1px solid var(--line);
+             border-radius:12px;padding:11px 12px;margin-bottom:8px;}
+  .hist-main{flex:1;min-width:0;}
+  .hist-row{display:flex;justify-content:space-between;gap:8px;font-size:14px;font-weight:600;}
+  .hist-date{font-size:12px;color:var(--sub);font-weight:400;}
+  .hist-pct{color:var(--green-700);}
+  .hist-view{flex-shrink:0;background:var(--green-700);color:#fff;border:none;border-radius:10px;
+             padding:8px 12px;font-size:13px;cursor:pointer;font-family:inherit;}
+  .wrong-item{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px;margin-bottom:10px;}
+  .wrong-head{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:6px;}
+  .wrong-stem{font-size:14px;font-weight:600;margin:0 0 8px;word-break:break-word;}
+  .clear-btn{background:none;border:1px solid var(--line);border-radius:8px;padding:4px 10px;
+             font-size:12px;color:var(--sub);cursor:pointer;font-family:inherit;}
+  .clear-btn:active{border-color:var(--red);color:var(--red);}
+  .result-box{text-align:center;padding:20px 10px;}
+  .result-num{font-size:44px;font-weight:800;color:var(--green-700);}
+  .result-num .sub{font-size:15px;color:var(--sub);font-weight:400;}
+  .result-line{font-size:14px;color:var(--sub);margin-top:6px;}
+  /* 收藏页 */
+  .fav-item{display:flex;gap:10px;align-items:center;background:var(--card);border:1px solid var(--line);
+            border-radius:12px;padding:11px 12px;margin-bottom:8px;cursor:pointer;}
+  .fav-item:active{border-color:var(--green-600);}
+  .fav-no{flex-shrink:0;width:26px;height:26px;border-radius:50%;background:var(--green-100);
+          color:var(--green-900);font-weight:800;font-size:13px;display:flex;align-items:center;justify-content:center;}
+  .fav-main{flex:1;min-width:0;}
+  .fav-head{display:flex;gap:6px;margin-bottom:2px;}
+  .fav-stem{font-size:13px;color:var(--ink);overflow:hidden;text-overflow:ellipsis;display:-webkit-box;
+            -webkit-line-clamp:2;-webkit-box-orient:vertical;}
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <div>
+      <div class="t">刷题应用</div>
+      <div class="s" id="headerSub">碳汇题库 300 题</div>
+    </div>
+  </header>
+  <main id="view"></main>
+  <nav>
+    <button data-nav="home" onclick="go('home')">首页</button>
+    <button data-nav="fav" onclick="go('fav')">收藏</button>
+  </nav>
+</div>
+<script>
+"use strict";
+/* ===== 数据层 ===== */
+const DATA = [
+ {
+  "id": 1,
+  "type": "single",
+  "module": "碳汇与CCER方法学",
+  "stem": "当计算产品碳足迹中因土地利用引起的温室气体排放与清除变化时，所选的分析周期必须至少覆盖（ ）个完整的作物或林木轮作期。",
+  "opts": [
+   {
+    "k": "A",
+    "t": "1"
+   },
+   {
+    "k": "B",
+    "t": "2"
+   },
+   {
+    "k": "C",
+    "t": "3"
+   },
+   {
+    "k": "D",
+    "t": "4"
+   }
+  ],
+  "ans": "A"
+ },
+ {
+  "id": 2,
+  "type": "single",
+  "module": "碳汇与CCER方法学",
+  "stem": "通过增强生态系统吸收和储存二氧化碳的能力来减缓气候变化的做法，属于（ ）",
+  "opts": [
+   {
+    "k": "A",
+    "t": "围湖造田增加耕地"
+   },
+   {
+    "k": "B",
+    "t": "砍伐森林建设住宅"
+   },
+   {
+    "k": "C",
+    "t": "过度放牧发展畜牧业"
+   },
+   {
+    "k": "D",
+    "t": "开展大规模的植树造林活动"
+   }
+  ],
+  "ans": "D"
+ },
+ {
+  "id": 3,
+  "type": "single",
+  "module": "碳汇与CCER方法学",
+  "stem": "在红树林方法学的项目清除量计算公式中，符号∆SOCPROJ,t代表了（）。",
+  "opts": [
+   {
+    "k": "A",
+    "t": "枯枝落叶层碳储量变化"
+   },
+   {
+    "k": "B",
+    "t": "土壤有机碳储量变化量"
+   },
+   {
+    "k": "C",
+    "t": "地上生物质碳储量变化"
+   },
+   {
+    "k": "D",
+    "t": "地下生物质碳储量变化"
+   }
+  ],
+  "ans": "B"
+ },
+ {
+  "id": 4,
+  "type": "single",
+  "module": "碳汇与CCER方法学",
+  "stem": "在探讨温室气体排放的来源时，下列哪一因素与其排放量的关联性最弱（ ）",
+  "opts": [
+   {
+    "k": "A",
+    "t": "森林覆盖率"
+   },
+   {
+    "k": "B",
+    "t": "经济发展模式"
+   },
+   {
+    "k": "C",
+    "t": "月球的引力"
+   },
+   {
+    "k": "D",
+    "t": "人口数量变化"
+   }
+  ],
+  "ans": "C"
+ },
+ {
+  "id": 5,
+  "type": "single",
+  "module": "碳汇与CCER方法学",
+  "stem": "全球气候模式的改变，可能对森林这一重要的生态系统造成的影响是（ ）",
+  "opts": [
+   {
+    "k": "A",
+    "t": "改变森林病虫害的发生规律，使其更易爆发"
+   },
+   {
+    "k": "B",
+    "t": "增加森林的固碳能力"
+   },
+   {
+    "k": "C",
+    "t": "提升木材的经济价值"
+   },
+   {
+    "k": "D",
+    "t": "降低森林火灾的发生概率"
+   }
+  ],
+  "ans": "A"
+ },
+ {
+  "id": 6,
+  "type": "single",
+  "module": "碳汇与CCER方法学",
+  "stem": "推出首批四项CCER方法学的首要目的，是为了（ ）。",
+  "opts": [
+   {
+    "k": "A",
+    "t": "强制所有企业参与"
+   },
+   {
+    "k": "B",
+    "t": "规范温室气体自愿减排项目的开发、实施和核算"
+   },
+   {
+    "k": "C",
+    "t": "仅适用于林业项目"
+   },
+   {
+    "k": "D",
+    "t": "替代强制减排市场"
+   }
+  ],
+  "ans": "B"
+ },
+ {
+  "id": 7,
+  "type": "single",
+  "module": "碳汇与CCER方法学",
+  "stem": "依据红树林碳汇项目方法学，其项目时间边界的起始点通常被定义为（ ）。",
+  "opts": [
+   {
+    "k": "A",
+    "t": "项目通过专家评审的时刻"
+   },
+   {
+    "k": "B",
+    "t": "项目获得融资的时刻"
+   },
+   {
+    "k": "C",
+    "t": "红树林种植项目的筹备阶段，包括场地清理等活动"
+   },
+   {
+    "k": "D",
+    "t": "红树林达到成熟期的时刻"
+   }
+  ],
+  "ans": "C"
+ },
+ {
+  "id": 8,
+  "type": "single",
+  "module": "碳汇与CCER方法学",
+  "stem": "关于红树林碳汇项目方法学中空间边界的界定，下列哪种说法是不正确的？（ ）",
+  "opts": [
+   {
+    "k": "A",
+    "t": "可以通过地形图和卫星遥感影像结合现场勘测来确定"
+   },
+   {
+    "k": "B",
+    "t": "包括平均高潮位和平均低潮位之间的潮间带"
+   },
+   {
+    "k": "C",
+    "t": "只需要考虑红树林种植区域，周边生态系统不重要"
+   },
+   {
+    "k": "D",
+    "t": "要考虑与盐沼、海草床等相邻生态系统的交界区域"
+   }
+  ],
+  "ans": "C"
+ },
+ {
+  "id": 9,
+  "type": "single",
+  "module": "碳汇与CCER方法学",
+  "stem": "在红树林碳汇项目方法学中，精确界定其空间边界，对于后续的碳汇量计算起到的核心作用是（ ）。",
+  "opts": [
+   {
+    "k": "A",
+    "t": "方便选择不同的碳汇计算方法"
+   },
+   {
+    "k": "B",
+    "t": "确定计算的范围，避免重复计算或遗漏"
+   },
+   {
+    "k": "C",
+    "t": "仅为了满足法规的形式要求"
+   },
+   {
+    "k": "D",
+    "t": "为了提高碳汇量的估算值"
+   }
+  ],
+  "ans": "B"
+ },
+ {
+  "id": 10,
+  "type": "single",
+  "module": "碳汇与CCER方法学",
+  "stem": "关于造林碳汇项目方法学中苗木培育阶段的碳排放核算，下列哪种观点是错误的？（ ）",
+  "opts": [
+   {
+    "k": "A",
+    "t": "要考虑育苗基质的生产排放"
+   },
+   {
+    "k": "B",
+    "t": "只需考虑苗木出圃时的碳排放"
+   },
+   {
+    "k": "C",
+    "t": "苗木培育过程中的灌溉、施肥排放要算"
+   },
+   {
+    "k": "D",
+    "t": "育苗温室的建设和运行排放纳入核算"
+   }
+  ],
+  "ans": "B"
+ },
+ {
+  "id": 11,
+  "type": "single",
+  "module": "温室气体基础",
+  "stem": "全球增温潜势（GWP）描述一单位特定温室气体相对于一单位 CO2 而言，产生的辐射影响力的因子。根据IPCC AR6报告，氧化亚氮气体的GWP-100为（）。",
+  "opts": [
+   {
+    "k": "A",
+    "t": "1"
+   },
+   {
+    "k": "B",
+    "t": "27.9"
+   },
+   {
+    "k": "C",
+    "t": "273"
+   },
+   {
+    "k": "D",
+    "t": "100"
+   }
+  ],
+  "ans": "C"
+ },
+ {
+  "id": 12,
+  "type": "single",
+  "module": "温室气体基础",
+  "stem": "识别非温室气体：以下选项中（）不参与温室效应？",
+  "opts": [
+   {
+    "k": "A",
+    "t": "氧化亚氮"
+   },
+   {
+    "k": "B",
+    "t": "氧气"
+   },
+   {
+    "k": "C",
+    "t": "六氟化硫"
+   },
+   {
+    "k": "D",
+    "t": "三氟甲烷"
+   }
+  ],
+  "ans": "B"
+ },
+ {
+  "id": 13,
+  "type": "single",
+  "module": "双碳政策与国际法规",
+  "stem": "（   ）被视为实现中国双碳目标的主要焦点区域？",
+  "opts": [
+   {
+    "k": "A",
+    "t": "工业化区"
+   },
+   {
+    "k": "B",
+    "t": "乡村地带"
+   },
+   {
+    "k": "C",
+    "t": "边远山区"
+   },
+   {
+    "k": "D",
+    "t": "城市化地区"
+   }
+  ],
+  "ans": "D"
+ },
+ {
+  "id": 14,
+  "type": "single",
+  "module": "双碳政策与国际法规",
+  "stem": "国际社会上首个致力于应对全球气候变暖的条约是（）。",
+  "opts": [
+   {
+    "k": "A",
+    "t": "《联合国气候变化框架公约》"
+   },
+   {
+    "k": "B",
+    "t": "哥本哈根协议"
+   },
+   {
+    "k": "C",
+    "t": "柏林授权公约"
+   },
+   {
+    "k": "D",
+    "t": "全球气候变暖框架公约"
+   }
+  ],
+  "ans": "A"
+ },
+ {
+  "id": 15,
+  "type": "single",
+  "module": "双碳政策与国际法规",
+  "stem": "每个绿色证书单位对应（ ）兆瓦时的绿色电力。",
+  "opts": [
+   {
+    "k": "A",
+    "t": "0.001"
+   },
+   {
+    "k": "B",
+    "t": "0.1"
+   },
+   {
+    "k": "C",
+    "t": "10"
+   },
+   {
+    "k": "D",
+    "t": "1"
+   }
+  ],
+  "ans": "D"
+ },
+ {
+  "id": 16,
+  "type": "single",
+  "module": "全国碳市场与碳交易",
+  "stem": "生态环境部在2025年全国碳排放权交易市场有关工作中要求，钢铁、铝冶炼和水泥行业重点单位须在2025年（）前上报上年度温室气体排放报告。",
+  "opts": [
+   {
+    "k": "A",
+    "t": "12月31日"
+   },
+   {
+    "k": "B",
+    "t": "9月30日"
+   },
+   {
+    "k": "C",
+    "t": "6月30日"
+   },
+   {
+    "k": "D",
+    "t": "3月31日"
+   }
+  ],
+  "ans": "C"
+ },
+ {
+  "id": 17,
+  "type": "single",
+  "module": "企业温室气体核算指南",
+  "stem": "在燃煤发电企业的核算指南中，（）的核算被视为核心内容与挑战。",
+  "opts": [
+   {
+    "k": "A",
+    "t": "二氧化硫"
+   },
+   {
+    "k": "B",
+    "t": "甲烷"
+   },
+   {
+    "k": "C",
+    "t": "高温气体排放"
+   },
+   {
+    "k": "D",
+    "t": "温室气体排放"
+   }
+  ],
+  "ans": "D"
+ },
+ {
+  "id": 18,
+  "type": "single",
+  "module": "企业温室气体核算指南",
+  "stem": "为保障全国重点排放单位的温室气体相关数据质量而设计的安排与规划称为（）",
+  "opts": [
+   {
+    "k": "A",
+    "t": "现场检查表"
+   },
+   {
+    "k": "B",
+    "t": "报告草案"
+   },
+   {
+    "k": "C",
+    "t": "核查结果"
+   },
+   {
+    "k": "D",
+    "t": "数据质量控制计划"
+   }
+  ],
+  "ans": "D"
+ },
+ {
+  "id": 19,
+  "type": "single",
+  "module": "企业温室气体核算指南",
+  "stem": "重点排放单位温室气体排放报告的编制应遵循（）。",
+  "opts": [
+   {
+    "k": "A",
+    "t": "相关法律法规"
+   },
+   {
+    "k": "B",
+    "t": "生态环境部指定的温室气体核算方法与报告指南及相关技术规范"
+   },
+   {
+    "k": "C",
+    "t": "相关技术要求"
+   },
+   {
+    "k": "D",
+    "t": "相关技术规范"
+   }
+  ],
+  "ans": "B"
+ },
+ {
+  "id": 20,
+  "type": "single",
+  "module": "企业温室气体核算指南",
+  "stem": "某发电行业重点排放单位未对化石燃料开展元素碳实测，则该化石燃料的收到基元素碳含量可用（）公式计算。",
+  "opts": [
+   {
+    "k": "A",
+    "t": "收到基元素碳含量=收到基低位发热量×单位热值含碳量"
+   },
+   {
+    "k": "B",
+    "t": "收到基元素碳含量=收到基低位发热量/单位热值含碳量"
+   },
+   {
+    "k": "C",
+    "t": "收到基元素碳含量=空干基低位发热量/单位热值含碳量"
+   },
+   {
+    "k": "D",
+    "t": "收到基元素碳含量=空干基低位发热量×单位热值含碳量"
+   }
+  ],
+  "ans": "A"
+ },
+ {
+  "id": 21,
+  "type": "single",
+  "module": "企业温室气体核算指南",
+  "stem": "某企业要开展组织温室气体核算工作，可采用的主要核算方法包括（）。",
+  "opts": [
+   {
+    "k": "A",
+    "t": "模拟计算法、排放因子法、质量平衡法"
+   },
+   {
+    "k": "B",
+    "t": "模拟计算法、实测法、排放因子法"
+   },
+   {
+    "k": "C",
+    "t": "实测法、质量平衡法、排放因子法"
+   },
+   {
+    "k": "D",
+    "t": "模拟计算法、预测法、排放因子法"
+   }
+  ],
+  "ans": "C"
+ },
+ {
+  "id": 22,
+  "type": "single",
+  "module": "温室气体基础",
+  "stem": "下列哪个气体不属于《京都议定书》及其修正案中规定控制的7类温室气体（）。",
+  "opts": [
+   {
+    "k": "A",
+    "t": "五氟化乙烷 HFC-125"
+   },
+   {
+    "k": "B",
+    "t": "氨气"
+   },
+   {
+    "k": "C",
+    "t": "八氟丙烷 PFC-218"
+   },
+   {
+    "k": "D",
+    "t": "七氟丙烷 HFC-227ea"
+   }
+  ],
+  "ans": "B"
+ },
+ {
+  "id": 23,
+  "type": "single",
+  "module": "企业温室气体核算指南",
+  "stem": "温室气体排放因子反映了活动水平与（）排放的关系。",
+  "opts": [
+   {
+    "k": "A",
+    "t": "二氧化碳"
+   },
+   {
+    "k": "B",
+    "t": "颗粒物"
+   },
+   {
+    "k": "C",
+    "t": "氨气"
+   },
+   {
+    "k": "D",
+    "t": "氯化物"
+   }
+  ],
+  "ans": "A"
+ },
+ {
+  "id": 24,
+  "type": "single",
+  "module": "企业温室气体核算指南",
+  "stem": "关于活动水平的定义，下列说法正确的是（）。",
+  "opts": [
+   {
+    "k": "A",
+    "t": "量化导致温室气体排放的生产活动量的表征值的过程"
+   },
+   {
+    "k": "B",
+    "t": "量化导致温室气体排放的消费活动量的表征值的过程"
+   },
+   {
+    "k": "C",
+    "t": "量化导致温室气体排放的生产或消费活动量的表征值的过程"
+   },
+   {
+    "k": "D",
+    "t": "量化导致温室气体排放的化石燃料消耗量的过程"
+   }
+  ],
+  "ans": "C"
+ },
+ {
+  "id": 25,
+  "type": "single",
+  "module": "全国碳市场与碳交易",
+  "stem": "截至2025年10月，全国碳排放权交易市场已覆盖的行业数量为()。",
+  "opts": [
+   {
+    "k": "A",
+    "t": "1"
+   },
+   {
+    "k": "B",
+    "t": "2"
+   },
+   {
+    "k": "C",
+    "t": "3"
+   },
+   {
+    "k": "D",
+    "t": "4"
+   }
+  ],
+  "ans": "D"
+ },
+ {
+  "id": 26,
+  "type": "single",
+  "module": "企业温室气体核算指南",
+  "stem": "下列选项中不属于直接温室气体排放的是（）。",
+  "opts": [
+   {
+    "k": "A",
+    "t": "锅炉燃烧天然气产生的排放"
+   },
+   {
+    "k": "B",
+    "t": "向外部企业购买蒸汽产生的排放"
+   },
+   {
+    "k": "C",
+    "t": "发电机燃烧柴油产生的排放"
+   },
+   {
+    "k": "D",
+    "t": "商务车燃烧汽油产生的排放"
+   }
+  ],
+  "ans": "B"
+ },
+ {
+  "id": 27,
+  "type": "single",
+  "module": "全国碳市场与碳交易",
+  "stem": "请判断下列哪个发电企业可能达到全国碳市场的纳入门槛？（）",
+  "opts": [
+   {
+    "k": "A",
+    "t": "年度温室气体排放量为0.5万吨二氧化碳当量"
+   },
+   {
+    "k": "B",
+    "t": "年度温室气体排放量为1.5万吨二氧化碳当量"
+   },
+   {
+    "k": "C",
+    "t": "年度温室气体排放量为2.5万吨二氧化碳当量"
+   },
+   {
+    "k": "D",
+    "t": "年度温室气体排放量为2.8万吨二氧化碳当量"
+   }
+  ],
+  "ans": "D"
+ },
+ {
+  "id": 28,
+  "type": "single",
+  "module": "企业温室气体核算指南",
+  "stem": "以下描述中，（）是正确的数据质量管理内容？",
+  "opts": [
+   {
+    "k": "A",
+    "t": "数据质量管理活动仅用于指导排放数据的记录工作"
+   },
+   {
+    "k": "B",
+    "t": "数据质量管理流程包含“活动数据检查” 环节"
+   },
+   {
+    "k": "C",
+    "t": "“排放因子检查” 环节在 “排放量计算过程检查” 之后"
+   },
+   {
+    "k": "D",
+    "t": "是否将数据质量管理方案整合到现有管理体系完全由组织自主决定"
+   }
+  ],
+  "ans": "B"
+ },
+ {
+  "id": 29,
+  "type": "single",
+  "module": "企业温室气体核算指南",
+  "stem": "下列选项中，属于常见的温室气体排放量化方法的是（）。",
+  "opts": [
+   {
+    "k": "A",
+    "t": "模拟预测法和物料平衡法"
+   },
+   {
+    "k": "B",
+    "t": "排放因子法和经验估算法"
+   },
+   {
+    "k": "C",
+    "t": "物料平衡法和排放因子法"
+   },
+   {
+    "k": "D",
+    "t": "物料平衡法和趋势外推法"
+   }
+  ],
+  "ans": "C"
+ },
+ {
+  "id": 30,
+  "type": "single",
+  "module": "企业温室气体核算指南",
+  "stem": "下列排放因子中，应优先选择的是（）。",
+  "opts": [
+   {
+    "k": "A",
+    "t": "区域排放因子"
+   },
+   {
+    "k": "B",
+    "t": "物料平衡法获得的排放因子"
+   },
+   {
+    "k": "C",
+    "t": "工艺经验因子"
+   },
+   {
+    "k": "D",
+    "t": "国际排放因子"
+   }
+  ],
+  "ans": "B"
+ },
+ {
+  "id": 31,
+  "type": "single",
+  "module": "企业温室气体核算指南",
+  "stem": "温室气体核算应最优先采用（）来源的活动数据。",
+  "opts": [
+   {
+    "k": "A",
+    "t": "文献引用数据"
+   },
+   {
+    "k": "B",
+    "t": "连续测量数据"
+   },
+   {
+    "k": "C",
+    "t": "间歇测量数据"
+   },
+   {
+    "k": "D",
+    "t": "推估数据"
+   }
+  ],
+  "ans": "B"
+ },
+ {
+  "id": 32,
+  "type": "single",
+  "module": "企业温室气体核算指南",
+  "stem": "下列选项中不应作为界定组织温室气体核算边界的参考依据的是（）。",
+  "opts": [
+   {
+    "k": "A",
+    "t": "组织的运营边界"
+   },
+   {
+    "k": "B",
+    "t": "企业法人或视同法人的独立核算单位"
+   },
+   {
+    "k": "C",
+    "t": "生产工艺流程图"
+   },
+   {
+    "k": "D",
+    "t": "雇员通勤距离"
+   }
+  ],
+  "ans": "D"
+ },
+ {
+  "id": 33,
+  "type": "single",
+  "module": "企业温室气体核算指南",
+  "stem": "对于参与全国碳市场的热电联产企业的化石燃料元素碳含量检测报告，下列哪项是必需参数（）",
+  "opts": [
+   {
+    "k": "A",
+    "t": "低位发热量、全硫、水分"
+   },
+   {
+    "k": "B",
+    "t": "低位发热量、全硫、挥发分"
+   },
+   {
+    "k": "C",
+    "t": "低位发热量、水分、挥发分"
+   },
+   {
+    "k": "D",
+    "t": "低位发热量、灰分、挥发分"
+   }
+  ],
+  "ans": "A"
+ },
+ {
+  "id": 34,
+  "type": "single",
+  "module": "企业温室气体核算指南",
+  "stem": "平板玻璃生产企业核算边界内的关键排放源不包括（）。",
+  "opts": [
+   {
+    "k": "A",
+    "t": "化石燃料的燃烧"
+   },
+   {
+    "k": "B",
+    "t": "原料配料中碳粉氧化、原料碳酸盐分解"
+   },
+   {
+    "k": "C",
+    "t": "外部物流公司向厂内运输原料的燃料消耗"
+   },
+   {
+    "k": "D",
+    "t": "净购入使用的电力和热力"
+   }
+  ],
+  "ans": "C"
+ },
+ {
+  "id": 35,
+  "type": "single",
+  "module": "企业温室气体核算指南",
+  "stem": "下列内容及排序符合《企业温室气体排放核算与报告指南 发电设施》中规定的购入使用电量数据获取优先序的是（）。",
+  "opts": [
+   {
+    "k": "A",
+    "t": "供应商提供的电费结算凭证上的数据、根据电表记录的读数统计的数据"
+   },
+   {
+    "k": "B",
+    "t": "根据电表记录的读数统计的数据、供应商提供的电费结算凭证上的数据"
+   },
+   {
+    "k": "C",
+    "t": "企业月度用电量平均值、企业内部估测用电量"
+   },
+   {
+    "k": "D",
+    "t": "企业季度用电量平均值、企业内部估测用电量"
+   }
+  ],
+  "ans": "B"
+ },
+ {
+  "id": 36,
+  "type": "single",
+  "module": "企业温室气体核算指南",
+  "stem": "纳入全国碳排放权交易市场的发电行业重点排放单位的供热量为（）。",
+  "opts": [
+   {
+    "k": "A",
+    "t": "锅炉不经汽轮机直供蒸汽热量、汽轮机直接供热量与烟气余热利用供热量之和"
+   },
+   {
+    "k": "B",
+    "t": "汽轮机直接供热量、汽轮机间接供热量与烟气余热利用供热量之和"
+   },
+   {
+    "k": "C",
+    "t": "锅炉不经汽轮机直供蒸汽热量、汽轮机直接供热量、汽轮机间接供热量与烟气余热利用供热量之和"
+   },
+   {
+    "k": "D",
+    "t": "锅炉不经汽轮机直供蒸汽热量、汽轮机直接供热量与汽轮机间接供热量之和"
+   }
+  ],
+  "ans": "D"
+ },
+ {
+  "id": 37,
+  "type": "single",
+  "module": "企业温室气体核算指南",
+  "stem": "根据《企业温室气体排放核算与报告指南 发电设施》要求，在计算掺烧化石燃料的生物质发电机组、垃圾（含污泥）焚烧发电机组等产生的二氧化碳排放时，应当（）。",
+  "opts": [
+   {
+    "k": "A",
+    "t": "忽略此部分二氧化碳排放"
+   },
+   {
+    "k": "B",
+    "t": "仅计算生物质燃料部分的二氧化碳排放"
+   },
+   {
+    "k": "C",
+    "t": "仅统计燃料中化石燃料的二氧化碳排放"
+   },
+   {
+    "k": "D",
+    "t": "计算所有燃料燃烧产生的二氧化碳排放"
+   }
+  ],
+  "ans": "C"
+ },
+ {
+  "id": 38,
+  "type": "single",
+  "module": "企业温室气体核算指南",
+  "stem": "根据《企业温室气体排放核算与报告指南 发电设施》，（）不属于重点排放单位化石燃料燃烧产生的二氧化碳。",
+  "opts": [
+   {
+    "k": "A",
+    "t": "脱硫脱硝装置消耗化石燃料加热烟气产生的排放"
+   },
+   {
+    "k": "B",
+    "t": "燃气轮机消耗的化石燃料燃烧产生的排放"
+   },
+   {
+    "k": "C",
+    "t": "应急柴油发电机组消耗化石燃料产生的排放"
+   },
+   {
+    "k": "D",
+    "t": "发电锅炉消耗的化石燃料燃烧产生的排放"
+   }
+  ],
+  "ans": "C"
+ },
+ {
+  "id": 39,
+  "type": "single",
+  "module": "企业温室气体核算指南",
+  "stem": "纳入全国碳市场的发电行业重点排放单位在进行温室气体排放核算与报告时，应首先采用的燃煤消耗量为（）。",
+  "opts": [
+   {
+    "k": "A",
+    "t": "地磅称重数据"
+   },
+   {
+    "k": "B",
+    "t": "结算凭证数据"
+   },
+   {
+    "k": "C",
+    "t": "内部人员经验估算值"
+   },
+   {
+    "k": "D",
+    "t": "经校验合格后的皮带秤或耐压式计量给煤机的入炉煤测量结果"
+   }
+  ],
+  "ans": "D"
+ },
+ {
+  "id": 40,
+  "type": "single",
+  "module": "企业温室气体核算指南",
+  "stem": "发电行业重点排放单位的入炉煤月度平均收到基低位发热量由每日/班所耗燃煤的收到基低位发热量加权平均计算得到，其权重为（）。",
+  "opts": [
+   {
+    "k": "A",
+    "t": "每日入磨煤量"
+   },
+   {
+    "k": "B",
+    "t": "每日/班入炉煤消耗量"
+   },
+   {
+    "k": "C",
+    "t": "燃煤月消耗量"
+   },
+   {
+    "k": "D",
+    "t": "每批次入厂煤量"
+   }
+  ],
+  "ans": "B"
+ },
+ {
+  "id": 41,
+  "type": "single",
+  "module": "企业温室气体核算指南",
+  "stem": "固体或液体化石燃料的收到基低位发热量单位通常是（）。",
+  "opts": [
+   {
+    "k": "A",
+    "t": "GJ/t"
+   },
+   {
+    "k": "B",
+    "t": "kJ/gC"
+   },
+   {
+    "k": "C",
+    "t": "t/GJ"
+   },
+   {
+    "k": "D",
+    "t": "gC/kJ"
+   }
+  ],
+  "ans": "A"
+ },
+ {
+  "id": 42,
+  "type": "single",
+  "module": "企业温室气体核算指南",
+  "stem": "根据《企业温室气体排放核算与报告指南 铝冶炼行业》，以下哪项不属于铝冶炼设施的直接排放（）？",
+  "opts": [
+   {
+    "k": "A",
+    "t": "铝电解工序阳极作为原材料消耗产生的二氧化碳排放"
+   },
+   {
+    "k": "B",
+    "t": "阳极效应排放"
+   },
+   {
+    "k": "C",
+    "t": "碳酸盐分解排放"
+   },
+   {
+    "k": "D",
+    "t": "购入使用电力的排放"
+   }
+  ],
+  "ans": "D"
+ },
+ {
+  "id": 43,
+  "type": "single",
+  "module": "企业温室气体核算指南",
+  "stem": "某水泥行业重点排放单位在熟料生产过程中使用电石渣作为非碳酸盐替代原料，采用入窑的皮带秤计量数据作为其消耗量，则该企业至少需要以（）的频次对该皮带秤进行校验。",
+  "opts": [
+   {
+    "k": "A",
+    "t": "每年一次"
+   },
+   {
+    "k": "B",
+    "t": "每月一次"
+   },
+   {
+    "k": "C",
+    "t": "每季度一次"
+   },
+   {
+    "k": "D",
+    "t": "每旬一次"
+   }
+  ],
+  "ans": "B"
+ },
+ {
+  "id": 44,
+  "type": "single",
+  "module": "企业温室气体核算指南",
+  "stem": "根据《企业温室气体排放核算与报告指南 水泥行业》，以下可进行排放核减的非碳酸盐替代原料的是（）。",
+  "opts": [
+   {
+    "k": "A",
+    "t": "镁渣、磷渣、脱硫石膏"
+   },
+   {
+    "k": "B",
+    "t": "钢渣、造纸白泥、煤矸石"
+   },
+   {
+    "k": "C",
+    "t": "粉煤灰、赤泥、天然石膏"
+   },
+   {
+    "k": "D",
+    "t": "钒钛渣、建筑垃圾、钢渣"
+   }
+  ],
+  "ans": "A"
+ },
+ {
+  "id": 45,
+  "type": "single",
+  "module": "企业温室气体核算指南",
+  "stem": "某参与全国碳市场的水泥熟料生产企业内存在纳入碳排放权交易市场的发电设施，则该企业应当（）。",
+  "opts": [
+   {
+    "k": "A",
+    "t": "忽略该发电设施的二氧化碳排放"
+   },
+   {
+    "k": "B",
+    "t": "依据水泥行业核算指南要求一并核算并报告其温室气体排放量"
+   },
+   {
+    "k": "C",
+    "t": "直接引用该发电设施经核算的二氧化碳排放量"
+   },
+   {
+    "k": "D",
+    "t": "仅核算其直接排放部分"
+   }
+  ],
+  "ans": "C"
+ },
+ {
+  "id": 46,
+  "type": "single",
+  "module": "企业温室气体核算指南",
+  "stem": "某水泥行业重点排放单位无法分辨其使用的煤种，则该煤种的单位热值含碳量应采用（）。",
+  "opts": [
+   {
+    "k": "A",
+    "t": "供应商合同值"
+   },
+   {
+    "k": "B",
+    "t": "水泥行业核算指南附录所有煤种含碳量的平均值"
+   },
+   {
+    "k": "C",
+    "t": "水泥行业核算指南附录中烟煤的单位热值含碳量缺省值"
+   },
+   {
+    "k": "D",
+    "t": "水泥行业核算指南附录中褐煤的单位热值含碳量缺省值"
+   }
+  ],
+  "ans": "D"
+ },
+ {
+  "id": 47,
+  "type": "single",
+  "module": "企业温室气体核算指南",
+  "stem": "在发电企业的碳排放计算中，实测燃煤元素碳含量应使用（）数据。",
+  "opts": [
+   {
+    "k": "A",
+    "t": "收到基元素碳含量"
+   },
+   {
+    "k": "B",
+    "t": "空气干燥基元素碳含量"
+   },
+   {
+    "k": "C",
+    "t": "干燥基元素碳含量"
+   },
+   {
+    "k": "D",
+    "t": "干燥无灰基元素碳含量"
+   }
+  ],
+  "ans": "A"
+ },
+ {
+  "id": 48,
+  "type": "single",
+  "module": "企业温室气体核算指南",
+  "stem": "在水泥行业中，（）的碳排放量最高。",
+  "opts": [
+   {
+    "k": "A",
+    "t": "矿山开采工序"
+   },
+   {
+    "k": "B",
+    "t": "熟料烧成工序"
+   },
+   {
+    "k": "C",
+    "t": "生料制备工序"
+   },
+   {
+    "k": "D",
+    "t": "水泥粉磨工序"
+   }
+  ],
+  "ans": "B"
+ },
+ {
+  "id": 49,
+  "type": "single",
+  "module": "企业温室气体核算指南",
+  "stem": "下列选项中，（）属于水泥熟料生产中应核算的化石燃料燃烧排放。",
+  "opts": [
+   {
+    "k": "A",
+    "t": "替代燃料在水泥窑中燃烧产生的二氧化碳排放"
+   },
+   {
+    "k": "B",
+    "t": "水泥窑点火柴油燃烧产生的二氧化碳排放"
+   },
+   {
+    "k": "C",
+    "t": "化石燃料在水泥窑中燃烧产生的二氧化碳排放"
+   },
+   {
+    "k": "D",
+    "t": "以上均不属于"
+   }
+  ],
+  "ans": "C"
+ },
+ {
+  "id": 50,
+  "type": "single",
+  "module": "企业温室气体核算指南",
+  "stem": "某水泥熟料生产企业现要统计当月的褐煤消耗量，已知褐煤进厂量为2400吨，期初库存为800吨，期末库存为600吨，外销量为400吨，那么当月褐煤消耗量是（）。",
+  "opts": [
+   {
+    "k": "A",
+    "t": "3200吨"
+   },
+   {
+    "k": "B",
+    "t": "1800吨"
+   },
+   {
+    "k": "C",
+    "t": "600吨"
+   },
+   {
+    "k": "D",
+    "t": "2200吨"
+   }
+  ],
+  "ans": "D"
+ },
+ {
+  "id": 51,
+  "type": "single",
+  "module": "企业温室气体核算指南",
+  "stem": "某水泥企业的原煤堆场为厂内多条生产线共用，现要计算各生产线的化石燃料消耗量，根据相应的碳市场技术规范，以下哪项符合各生产线的化石燃料消费量分摊规则？（）",
+  "opts": [
+   {
+    "k": "A",
+    "t": "燃煤进厂量与生产线数量平均分摊"
+   },
+   {
+    "k": "B",
+    "t": "燃煤消耗量与生产线数量平均分摊"
+   },
+   {
+    "k": "C",
+    "t": "根据生产线的运行时间分摊"
+   },
+   {
+    "k": "D",
+    "t": "根据生产线的熟料产量分摊"
+   }
+  ],
+  "ans": "D"
+ },
+ {
+  "id": 52,
+  "type": "single",
+  "module": "企业温室气体核算指南",
+  "stem": "水泥行业重点排放单位的燃煤收到基低位发热量实测值检测报告应由通过（）且具备相关能力的检测机构/实验室出具。",
+  "opts": [
+   {
+    "k": "A",
+    "t": "企业高层审核"
+   },
+   {
+    "k": "B",
+    "t": "CMA 认定或 CNAS 认可"
+   },
+   {
+    "k": "C",
+    "t": "ISO认证"
+   },
+   {
+    "k": "D",
+    "t": "地方行业协会认证"
+   }
+  ],
+  "ans": "B"
+ },
+ {
+  "id": 53,
+  "type": "single",
+  "module": "企业温室气体核算指南",
+  "stem": "下列单位表述错误的一项是（）。",
+  "opts": [
+   {
+    "k": "A",
+    "t": "单位热值含碳量 tC/GJ"
+   },
+   {
+    "k": "B",
+    "t": "排放因子 kgC/GJ"
+   },
+   {
+    "k": "C",
+    "t": "低位发热量 GJ/t"
+   },
+   {
+    "k": "D",
+    "t": "单位产品综合煤耗 kgce/t"
+   }
+  ],
+  "ans": "B"
+ },
+ {
+  "id": 54,
+  "type": "single",
+  "module": "企业温室气体核算指南",
+  "stem": "钢铁行业重点排放单位在确定固体燃料消耗量时，若无法获取其收到基购（产）销存台账数据，则应根据（）确定固体燃料消耗量。",
+  "opts": [
+   {
+    "k": "A",
+    "t": "企业内部估算数据"
+   },
+   {
+    "k": "B",
+    "t": "上一年度固体燃料消耗量平均值"
+   },
+   {
+    "k": "C",
+    "t": "购入量和外销量的差值作为消耗量，且购入量和外销量用直接计量的月度贸易结算数据"
+   },
+   {
+    "k": "D",
+    "t": "月度购（产）销存台账中的消耗量数据"
+   }
+  ],
+  "ans": "C"
+ },
+ {
+  "id": 55,
+  "type": "single",
+  "module": "企业温室气体核算指南",
+  "stem": "钢铁行业重点排放单位在计算烧结工序消耗化石燃料产生的二氧化碳排放时，（）不属于关键参数？",
+  "opts": [
+   {
+    "k": "A",
+    "t": "化石燃料的收到基低位发热量"
+   },
+   {
+    "k": "B",
+    "t": "化石燃料的单位热值含碳量"
+   },
+   {
+    "k": "C",
+    "t": "化石燃料的输入量"
+   },
+   {
+    "k": "D",
+    "t": "铁矿石品类"
+   }
+  ],
+  "ans": "D"
+ },
+ {
+  "id": 56,
+  "type": "single",
+  "module": "企业温室气体核算指南",
+  "stem": "《企业温室气体排放核算与报告指南 钢铁行业》中的含碳产品主要指的是（）。",
+  "opts": [
+   {
+    "k": "A",
+    "t": "粗钢产品及外销的生铁、粗苯和焦油"
+   },
+   {
+    "k": "B",
+    "t": "废钢"
+   },
+   {
+    "k": "C",
+    "t": "炉渣"
+   },
+   {
+    "k": "D",
+    "t": "铁矿石"
+   }
+  ],
+  "ans": "A"
+ },
+ {
+  "id": 57,
+  "type": "single",
+  "module": "企业温室气体核算指南",
+  "stem": "钢铁行业重点排放单位的工序层级核算边界不包括（）。",
+  "opts": [
+   {
+    "k": "A",
+    "t": "烧结工序"
+   },
+   {
+    "k": "B",
+    "t": "精炼工序"
+   },
+   {
+    "k": "C",
+    "t": "转炉炼钢工序"
+   },
+   {
+    "k": "D",
+    "t": "矿山开采工序"
+   }
+  ],
+  "ans": "D"
+ },
+ {
+  "id": 58,
+  "type": "single",
+  "module": "温室气体基础",
+  "stem": "识别GWP-100最高的温室气体（）。",
+  "opts": [
+   {
+    "k": "A",
+    "t": "氧化亚氮"
+   },
+   {
+    "k": "B",
+    "t": "甲烷"
+   },
+   {
+    "k": "C",
+    "t": "六氟化硫"
+   },
+   {
+    "k": "D",
+    "t": "三氟化氮"
+   }
+  ],
+  "ans": "C"
+ },
+ {
+  "id": 59,
+  "type": "single",
+  "module": "企业温室气体核算指南",
+  "stem": "钢铁行业重点排放单位的转炉炼钢工序排放源包括（）。",
+  "opts": [
+   {
+    "k": "A",
+    "t": "转炉炼钢点火助燃用化石燃料的排放"
+   },
+   {
+    "k": "B",
+    "t": "转炉炼钢工序化石燃料净消耗的二氧化碳排放"
+   },
+   {
+    "k": "C",
+    "t": "转炉炼钢车间运输设施用化石燃料的排放"
+   },
+   {
+    "k": "D",
+    "t": "其他工序传递来的排放"
+   }
+  ],
+  "ans": "B"
+ },
+ {
+  "id": 60,
+  "type": "single",
+  "module": "企业温室气体核算指南",
+  "stem": "钢铁行业重点排放单位各工序的产品产量优先采用（）数据。",
+  "opts": [
+   {
+    "k": "A",
+    "t": "理论历史数据"
+   },
+   {
+    "k": "B",
+    "t": "同类产品数据"
+   },
+   {
+    "k": "C",
+    "t": "人工汇总数据"
+   },
+   {
+    "k": "D",
+    "t": "直接计量数据"
+   }
+  ],
+  "ans": "D"
+ },
+ {
+  "id": 61,
+  "type": "single",
+  "module": "企业温室气体核算指南",
+  "stem": "钢铁行业重点排放单位一般不输出化石燃料的工序是（）。",
+  "opts": [
+   {
+    "k": "A",
+    "t": "烧结工序"
+   },
+   {
+    "k": "B",
+    "t": "转炉炼钢工序"
+   },
+   {
+    "k": "C",
+    "t": "炼铁工序"
+   },
+   {
+    "k": "D",
+    "t": "焦化工序"
+   }
+  ],
+  "ans": "A"
+ },
+ {
+  "id": 62,
+  "type": "single",
+  "module": "企业温室气体核算指南",
+  "stem": "下列选项中（）是钢铁行业重点排放单位的企业层级排放量核算方法。",
+  "opts": [
+   {
+    "k": "A",
+    "t": "直接测量法"
+   },
+   {
+    "k": "B",
+    "t": "质量平衡法"
+   },
+   {
+    "k": "C",
+    "t": "能量平衡法"
+   },
+   {
+    "k": "D",
+    "t": "物料平衡法"
+   }
+  ],
+  "ans": "D"
+ },
+ {
+  "id": 63,
+  "type": "single",
+  "module": "企业温室气体核算指南",
+  "stem": "下列选项中（）属于铝冶炼行业重点排放单位的铝电解工序排放量计算方式。",
+  "opts": [
+   {
+    "k": "A",
+    "t": "仅为铝冶炼企业各铝电解工序的阳极效应排放量"
+   },
+   {
+    "k": "B",
+    "t": "仅为铝冶炼企业各铝电解工序的能源作为原材料用途的排放量"
+   },
+   {
+    "k": "C",
+    "t": "铝冶炼企业各铝电解工序的能源作为燃料用途的排放量与阳极效应排放量之和"
+   },
+   {
+    "k": "D",
+    "t": "铝冶炼企业各铝电解工序的能源作为原材料用途的排放量与阳极效应排放量之和"
+   }
+  ],
+  "ans": "D"
+ },
+ {
+  "id": 64,
+  "type": "single",
+  "module": "企业温室气体核算指南",
+  "stem": "下列选项中（）不包括在铝冶炼行业重点排放单位的碳酸盐分解产生的二氧化碳排放。",
+  "opts": [
+   {
+    "k": "A",
+    "t": "生产过程中碳酸盐发生分解化学反应"
+   },
+   {
+    "k": "B",
+    "t": "使用未发生分解反应的碳酸钙原料"
+   },
+   {
+    "k": "C",
+    "t": "使用纯碱（主要成分为碳酸钠）且在生产中发生分解反应"
+   },
+   {
+    "k": "D",
+    "t": "使用石灰石（主要成分为碳酸钙）且在生产中发生分解反应"
+   }
+  ],
+  "ans": "B"
+ },
+ {
+  "id": 65,
+  "type": "single",
+  "module": "企业温室气体核算指南",
+  "stem": "铝冶炼行业重点排放单位在获取阳极消耗量时，最优先采用（）数据。",
+  "opts": [
+   {
+    "k": "A",
+    "t": "人工称重记录的阳极炭块质量数据"
+   },
+   {
+    "k": "B",
+    "t": "生产报表中估算的阳极质量数据"
+   },
+   {
+    "k": "C",
+    "t": "浇铸前电子汽车衡等计量器具直接计量的阳极炭块质量数据"
+   },
+   {
+    "k": "D",
+    "t": "通过消耗块数和阳极炭块单重计算的数据"
+   }
+  ],
+  "ans": "C"
+ },
+ {
+  "id": 66,
+  "type": "single",
+  "module": "企业温室气体核算指南",
+  "stem": "根据全国碳市场相关技术规范，铝冶炼行业重点排放单位使用消耗块数和阳极炭块单重计算阳极消耗量时，依据（）来确定消耗块数。",
+  "opts": [
+   {
+    "k": "A",
+    "t": "仓库的入库记录"
+   },
+   {
+    "k": "B",
+    "t": "生产车间之间的转运单、生产报表载明的数据"
+   },
+   {
+    "k": "C",
+    "t": "生产车间的口头汇报"
+   },
+   {
+    "k": "D",
+    "t": "随机抽取的样本数据"
+   }
+  ],
+  "ans": "B"
+ },
+ {
+  "id": 67,
+  "type": "single",
+  "module": "企业温室气体核算指南",
+  "stem": "下列关于铝冶炼行业重点排放单位的铝液产量的计量与监测，描述不正确的是（）。",
+  "opts": [
+   {
+    "k": "A",
+    "t": "企业应使用依法经计量检定合格或者校准的计量器具，计量器具的配备和管理应符合企业内部要求"
+   },
+   {
+    "k": "B",
+    "t": "铝液产量是指铝电解工序实际产出的电解原铝液产量"
+   },
+   {
+    "k": "C",
+    "t": "优先采用生产系统记录的电子汽车衡计量数据"
+   },
+   {
+    "k": "D",
+    "t": "不具备电子汽车衡计量条件的，采用铝电解车间之外的电子吊秤计量的数据"
+   }
+  ],
+  "ans": "A"
+ },
+ {
+  "id": 68,
+  "type": "single",
+  "module": "企业温室气体核算指南",
+  "stem": "以下哪项是《中国化工生产企业温室气体排放核算方法与报告指南（试行）》规定的原材料消耗产生的 CO2排放量核算方法？（）",
+  "opts": [
+   {
+    "k": "A",
+    "t": "直接测量法"
+   },
+   {
+    "k": "B",
+    "t": "物料衡算法"
+   },
+   {
+    "k": "C",
+    "t": "碳质量平衡法"
+   },
+   {
+    "k": "D",
+    "t": "排放因子法"
+   }
+  ],
+  "ans": "C"
+ },
+ {
+  "id": 69,
+  "type": "single",
+  "module": "企业温室气体核算指南",
+  "stem": "下列选项中（）不属于《中国化工生产企业温室气体排放核算方法与报告指南（试行）》中的工业生产过程排放。",
+  "opts": [
+   {
+    "k": "A",
+    "t": "硝酸或已二酸生产过程的N2O排放"
+   },
+   {
+    "k": "B",
+    "t": "化石燃料和其它碳氢化合物用作原材料产生的CO2排放"
+   },
+   {
+    "k": "C",
+    "t": "导热油炉燃烧天然气提供热量产生的 CO2排放"
+   },
+   {
+    "k": "D",
+    "t": "碳酸盐使用过程(如石灰石、白云石等用作原材料、助熔剂或脱硫剂)产生的CO2排放"
+   }
+  ],
+  "ans": "C"
+ },
+ {
+  "id": 70,
+  "type": "single",
+  "module": "企业温室气体核算指南",
+  "stem": "下列选项中（）不在《中国平板玻璃生产企业温室气体排放核算方法与报告指南（试行）》中平板玻璃生产企业的核算边界内。",
+  "opts": [
+   {
+    "k": "A",
+    "t": "附属生产系统（如职工食堂）"
+   },
+   {
+    "k": "B",
+    "t": "企业外的玻璃经销商仓库"
+   },
+   {
+    "k": "C",
+    "t": "辅助生产系统（如供电、供水）"
+   },
+   {
+    "k": "D",
+    "t": "直接生产系统（如玻璃熔窑）"
+   }
+  ],
+  "ans": "B"
+ },
+ {
+  "id": 71,
+  "type": "single",
+  "module": "企业温室气体核算指南",
+  "stem": "下列选项中属于《中国造纸和纸制品生产企业温室气体排放核算方法与报告指南（试行）》中造纸企业过程排放主要来源的是（）。",
+  "opts": [
+   {
+    "k": "A",
+    "t": "废纸降解"
+   },
+   {
+    "k": "B",
+    "t": "电力消耗"
+   },
+   {
+    "k": "C",
+    "t": "煤炭燃烧"
+   },
+   {
+    "k": "D",
+    "t": "石灰石（碳酸钙）分解"
+   }
+  ],
+  "ans": "D"
+ },
+ {
+  "id": 72,
+  "type": "single",
+  "module": "企业温室气体核算指南",
+  "stem": "《中国民用航空企业温室气体排放核算方法与报告指南（试行）》中规定民用航空企业温室气体排放报告中的（）无需单独统计。",
+  "opts": [
+   {
+    "k": "A",
+    "t": "生物质混合燃料中生物质含量"
+   },
+   {
+    "k": "B",
+    "t": "国际航班航空燃油消耗量"
+   },
+   {
+    "k": "C",
+    "t": "国内航班航空燃油消耗量"
+   },
+   {
+    "k": "D",
+    "t": "乘客数量"
+   }
+  ],
+  "ans": "D"
+ },
+ {
+  "id": 73,
+  "type": "single",
+  "module": "企业温室气体核算指南",
+  "stem": "下列选项中，不在《中国民用航空企业温室气体排放核算方法与报告指南（试行）》规定的民用航空企业燃料燃烧排放核算范围内的是（）。",
+  "opts": [
+   {
+    "k": "A",
+    "t": "地面电源车消耗的柴油"
+   },
+   {
+    "k": "B",
+    "t": "机场巴士消耗的柴油排放"
+   },
+   {
+    "k": "C",
+    "t": "航空器消耗的航空煤油"
+   },
+   {
+    "k": "D",
+    "t": "机场锅炉消耗的天然气"
+   }
+  ],
+  "ans": "B"
+ },
+ {
+  "id": 74,
+  "type": "single",
+  "module": "企业温室气体核算指南",
+  "stem": "在石化企业石油焦煅烧装置的CO2排放量计算中，不涉及的参数是（）。",
+  "opts": [
+   {
+    "k": "A",
+    "t": "生焦的平均含碳量"
+   },
+   {
+    "k": "B",
+    "t": "石油焦成品的质量"
+   },
+   {
+    "k": "C",
+    "t": "火炬气中 CO2的体积浓度"
+   },
+   {
+    "k": "D",
+    "t": "生焦的质量"
+   }
+  ],
+  "ans": "C"
+ },
+ {
+  "id": 75,
+  "type": "single",
+  "module": "企业温室气体核算指南",
+  "stem": "下列选项中（）不属于石油化工企业的温室气体排放源。",
+  "opts": [
+   {
+    "k": "A",
+    "t": "生物质燃料燃烧 CO2排放量"
+   },
+   {
+    "k": "B",
+    "t": "工业生产过程 CO2排放量"
+   },
+   {
+    "k": "C",
+    "t": "燃料燃烧 CO2排放量"
+   },
+   {
+    "k": "D",
+    "t": "火炬燃烧 CO2排放量"
+   }
+  ],
+  "ans": "A"
+ },
+ {
+  "id": 76,
+  "type": "single",
+  "module": "组织核算与ISO 14064-1",
+  "stem": "假设某企业使用控制权法确定其组织边界，则组织应将（）的温室气体排放纳入计算。",
+  "opts": [
+   {
+    "k": "A",
+    "t": "组织租用的设施"
+   },
+   {
+    "k": "B",
+    "t": "组织合作的设施"
+   },
+   {
+    "k": "C",
+    "t": "组织控制的设施"
+   },
+   {
+    "k": "D",
+    "t": "组织拥有的设施"
+   }
+  ],
+  "ans": "C"
+ },
+ {
+  "id": 77,
+  "type": "single",
+  "module": "组织核算与ISO 14064-1",
+  "stem": "下列选项中属于ISO 14064-1规定的间接温室气体排放的是（）。",
+  "opts": [
+   {
+    "k": "A",
+    "t": "交通运输的温室气体排放"
+   },
+   {
+    "k": "B",
+    "t": "外购能源的温室气体排放"
+   },
+   {
+    "k": "C",
+    "t": "组织产品的温室气体排放"
+   },
+   {
+    "k": "D",
+    "t": "生产过程温室气体的直接排放"
+   }
+  ],
+  "ans": "B"
+ },
+ {
+  "id": 78,
+  "type": "single",
+  "module": "组织核算与ISO 14064-1",
+  "stem": "下列选项中（）不属于ISO 14064-1规定的组织边界中组织对活动或设施行使控制的类型。",
+  "opts": [
+   {
+    "k": "A",
+    "t": "持有股权"
+   },
+   {
+    "k": "B",
+    "t": "财务控制"
+   },
+   {
+    "k": "C",
+    "t": "运营控制"
+   },
+   {
+    "k": "D",
+    "t": "隐形关系控制"
+   }
+  ],
+  "ans": "D"
+ },
+ {
+  "id": 79,
+  "type": "single",
+  "module": "组织核算与ISO 14064-1",
+  "stem": "组织在报告温室气体减排目标时需按照ISO 14064-1的要求对（）进行阐明。",
+  "opts": [
+   {
+    "k": "A",
+    "t": "目标设定团队成员名单"
+   },
+   {
+    "k": "B",
+    "t": "组织对未来低碳发展的战略规划"
+   },
+   {
+    "k": "C",
+    "t": "组织的减排量及其目标类型所采用的单位"
+   },
+   {
+    "k": "D",
+    "t": "目标的宣传推广方案"
+   }
+  ],
+  "ans": "C"
+ },
+ {
+  "id": 80,
+  "type": "single",
+  "module": "组织核算与ISO 14064-1",
+  "stem": "根据ISO 14064-1，为保证数据质量，（）是组织在收集特定活动数据时的首选。",
+  "opts": [
+   {
+    "k": "A",
+    "t": "行业默认的数据"
+   },
+   {
+    "k": "B",
+    "t": "汇总统计数据"
+   },
+   {
+    "k": "C",
+    "t": "主要活动计量数据或原始数据"
+   },
+   {
+    "k": "D",
+    "t": "文献的估算活动数据"
+   }
+  ],
+  "ans": "C"
+ },
+ {
+  "id": 81,
+  "type": "single",
+  "module": "全国碳市场与碳交易",
+  "stem": "以下不属于建立碳排放权交易体系目的是（）。",
+  "opts": [
+   {
+    "k": "A",
+    "t": "控制温室气体排放"
+   },
+   {
+    "k": "B",
+    "t": "增加政府的收入"
+   },
+   {
+    "k": "C",
+    "t": "在特定范围内合理分配排放资源"
+   },
+   {
+    "k": "D",
+    "t": "降低社会温室气体减排的成本"
+   }
+  ],
+  "ans": "B"
+ },
+ {
+  "id": 82,
+  "type": "single",
+  "module": "全国碳市场与碳交易",
+  "stem": "以下哪个国家或地区在碳排放权交易方面具有显著的先驱地位？（）",
+  "opts": [
+   {
+    "k": "A",
+    "t": "美国"
+   },
+   {
+    "k": "B",
+    "t": "欧盟"
+   },
+   {
+    "k": "C",
+    "t": "韩国"
+   },
+   {
+    "k": "D",
+    "t": "澳大利亚"
+   }
+  ],
+  "ans": "B"
+ },
+ {
+  "id": 83,
+  "type": "single",
+  "module": "全国碳市场与碳交易",
+  "stem": "（  ）不属于碳排放权交易市场的组成部分。",
+  "opts": [
+   {
+    "k": "A",
+    "t": "温室气体自愿减排量交易系统"
+   },
+   {
+    "k": "B",
+    "t": "碳排放权交易系统"
+   },
+   {
+    "k": "C",
+    "t": "重点排放单位碳排放量报送系统"
+   },
+   {
+    "k": "D",
+    "t": "产品碳足迹核算系统"
+   }
+  ],
+  "ans": "D"
+ },
+ {
+  "id": 84,
+  "type": "single",
+  "module": "全国碳市场与碳交易",
+  "stem": "企业设立科学碳目标（SBTi）分五个步骤，正确的顺序应该是（  ）？",
+  "opts": [
+   {
+    "k": "A",
+    "t": "提交承诺函、制定科学碳目标、验证目标、宣布目标、信息披露"
+   },
+   {
+    "k": "B",
+    "t": "提交承诺函、制定科学碳目标、宣布目标、验证目标、信息披露"
+   },
+   {
+    "k": "C",
+    "t": "提交承诺函、信息披露、制定科学碳目标、验证目标、宣布目标"
+   },
+   {
+    "k": "D",
+    "t": "提交承诺函、制定科学碳目标、宣布目标、信息披露、验证目标"
+   }
+  ],
+  "ans": "A"
+ },
+ {
+  "id": 85,
+  "type": "single",
+  "module": "全国碳市场与碳交易",
+  "stem": "欧盟市场储备机制（MSR）的制定是为了解决（  ）。",
+  "opts": [
+   {
+    "k": "A",
+    "t": "碳价过高的问题"
+   },
+   {
+    "k": "B",
+    "t": "市场上的结构性供应过剩问题"
+   },
+   {
+    "k": "C",
+    "t": "配额分配不公平的问题"
+   },
+   {
+    "k": "D",
+    "t": "碳泄漏的问题"
+   }
+  ],
+  "ans": "B"
+ },
+ {
+  "id": 86,
+  "type": "single",
+  "module": "全国碳市场与碳交易",
+  "stem": "（  ）是指燃料中的碳在燃烧过程中被氧化成二氧化碳的比率。",
+  "opts": [
+   {
+    "k": "A",
+    "t": "低位发热值"
+   },
+   {
+    "k": "B",
+    "t": "碳氧化率"
+   },
+   {
+    "k": "C",
+    "t": "活动数据"
+   },
+   {
+    "k": "D",
+    "t": "单位热值含碳量"
+   }
+  ],
+  "ans": "B"
+ },
+ {
+  "id": 87,
+  "type": "single",
+  "module": "全国碳市场与碳交易",
+  "stem": "在核算边界确认过程中，（）不是必须核实的。",
+  "opts": [
+   {
+    "k": "A",
+    "t": "核算边界的一致性"
+   },
+   {
+    "k": "B",
+    "t": "排放源的完整性"
+   },
+   {
+    "k": "C",
+    "t": "过去一年的核算边界变更"
+   },
+   {
+    "k": "D",
+    "t": "企业年度盈利"
+   }
+  ],
+  "ans": "D"
+ },
+ {
+  "id": 88,
+  "type": "single",
+  "module": "全国碳市场与碳交易",
+  "stem": "在全国碳排放交易系统中，（）代表交易主体进行系统操作？",
+  "opts": [
+   {
+    "k": "A",
+    "t": "政府主管部门"
+   },
+   {
+    "k": "B",
+    "t": "经授权的账户代表人"
+   },
+   {
+    "k": "C",
+    "t": "交易机构"
+   },
+   {
+    "k": "D",
+    "t": "交易系统运营方"
+   }
+  ],
+  "ans": "B"
+ },
+ {
+  "id": 89,
+  "type": "single",
+  "module": "双碳政策与国际法规",
+  "stem": "根据《企业可持续披露准则——基本准则（试行）》,准则要求企业将可持续信息与什么信息关联？（）",
+  "opts": [
+   {
+    "k": "A",
+    "t": "市场营销信息"
+   },
+   {
+    "k": "B",
+    "t": "财务报表信息"
+   },
+   {
+    "k": "C",
+    "t": "生产数据"
+   },
+   {
+    "k": "D",
+    "t": "员工绩效信息"
+   }
+  ],
+  "ans": "B"
+ },
+ {
+  "id": 90,
+  "type": "single",
+  "module": "双碳政策与国际法规",
+  "stem": "根据《企业可持续披露准则——基本准则（试行）》，价值链的定义是什么？（）",
+  "opts": [
+   {
+    "k": "A",
+    "t": "是指企业的生产经营活动各环节构成的简单线性流程"
+   },
+   {
+    "k": "B",
+    "t": "是指企业的价值创造活动各环节构成的完整关系链条"
+   },
+   {
+    "k": "C",
+    "t": "是指企业与供应商之间的单一合作关系网络"
+   },
+   {
+    "k": "D",
+    "t": "是指企业产品销售后提供的售后服务体系"
+   }
+  ],
+  "ans": "B"
+ },
+ {
+  "id": 91,
+  "type": "single",
+  "module": "双碳政策与国际法规",
+  "stem": "根据《企业可持续披露准则——基本准则（试行）》，企业披露的可持续信息应当满足的信息质量要求不包括以下哪项？（）",
+  "opts": [
+   {
+    "k": "A",
+    "t": "可靠性"
+   },
+   {
+    "k": "B",
+    "t": "相关性"
+   },
+   {
+    "k": "C",
+    "t": "客观性"
+   },
+   {
+    "k": "D",
+    "t": "及时性"
+   }
+  ],
+  "ans": "C"
+ },
+ {
+  "id": 92,
+  "type": "single",
+  "module": "双碳政策与国际法规",
+  "stem": "根据《企业可持续披露准则——基本准则（试行）》，可持续信息披露的报告主体应当与财务报表的报告主体保持（）关系？",
+  "opts": [
+   {
+    "k": "A",
+    "t": "保持独立"
+   },
+   {
+    "k": "B",
+    "t": "保持关联"
+   },
+   {
+    "k": "C",
+    "t": "保持一致"
+   },
+   {
+    "k": "D",
+    "t": "保持差异"
+   }
+  ],
+  "ans": "C"
+ },
+ {
+  "id": 93,
+  "type": "single",
+  "module": "双碳政策与国际法规",
+  "stem": "根据《促进新能源高质量发展的通知》2025年6月1日以前投产的新能源存量项目执行期限如何确定？（）",
+  "opts": [
+   {
+    "k": "A",
+    "t": "按照国家统一规定的5年执行"
+   },
+   {
+    "k": "B",
+    "t": "按照现行相关政策保障期限确定"
+   },
+   {
+    "k": "C",
+    "t": "由项目自主选择3-10年执行"
+   },
+   {
+    "k": "D",
+    "t": "根据上网电量规模动态调整"
+   }
+  ],
+  "ans": "B"
+ },
+ {
+  "id": 94,
+  "type": "single",
+  "module": "双碳政策与国际法规",
+  "stem": "根据《促进新能源高质量发展的通知》2025年6月1日以前投产的新能源存量项目机制电价如何确定？（）",
+  "opts": [
+   {
+    "k": "A",
+    "t": "按市场竞价结果执行"
+   },
+   {
+    "k": "B",
+    "t": "按现行价格政策执行且不高于当地煤电基准价"
+   },
+   {
+    "k": "C",
+    "t": "按当地新能源标杆上网电价执行"
+   },
+   {
+    "k": "D",
+    "t": "按项目投资成本加成确定"
+   }
+  ],
+  "ans": "B"
+ },
+ {
+  "id": 95,
+  "type": "single",
+  "module": "双碳政策与国际法规",
+  "stem": "根据《促进新能源高质量发展的通知》2025年6月1日以前投产的新能源存量项目电量规模的确定方式是？（）",
+  "opts": [
+   {
+    "k": "A",
+    "t": "由各地妥善衔接现行具有保障性质的相关电量规模政策"
+   },
+   {
+    "k": "B",
+    "t": "由项目每年自主确定全部执行机制的电量"
+   },
+   {
+    "k": "C",
+    "t": "按当地煤电基准价对应的电量确定"
+   },
+   {
+    "k": "D",
+    "t": "根据设备更新改造后的竞争力核定"
+   }
+  ],
+  "ans": "A"
+ },
+ {
+  "id": 96,
+  "type": "single",
+  "module": "双碳政策与国际法规",
+  "stem": "根据《促进新能源高质量发展的通知》已纳入新能源可持续发展价格结算机制的项目在执行期限内的退出方式是？（）",
+  "opts": [
+   {
+    "k": "A",
+    "t": "不得退出"
+   },
+   {
+    "k": "B",
+    "t": "可自愿申请退出"
+   },
+   {
+    "k": "C",
+    "t": "必须到期退出"
+   },
+   {
+    "k": "D",
+    "t": "需审批后退出"
+   }
+  ],
+  "ans": "B"
+ },
+ {
+  "id": 97,
+  "type": "single",
+  "module": "双碳政策与国际法规",
+  "stem": "根据《促进新能源高质量发展的通知》，新能源项目上网电量的市场交易要求是？（）",
+  "opts": [
+   {
+    "k": "A",
+    "t": "部分进入电力市场"
+   },
+   {
+    "k": "B",
+    "t": "原则上全部进入电力市场"
+   },
+   {
+    "k": "C",
+    "t": "根据电价情况选择性进入"
+   },
+   {
+    "k": "D",
+    "t": "不进入电力市场"
+   }
+  ],
+  "ans": "B"
+ },
+ {
+  "id": 98,
+  "type": "single",
+  "module": "双碳政策与国际法规",
+  "stem": "为贯彻落实党中央、国务院决策部署，建立能耗双控向（）全面转型新机制，积极稳妥推进碳达峰碳中和、加快发展方式绿色转型？",
+  "opts": [
+   {
+    "k": "A",
+    "t": "能耗双控制度体系"
+   },
+   {
+    "k": "B",
+    "t": "碳排放单控制度体系"
+   },
+   {
+    "k": "C",
+    "t": "碳排放总量和强度双控制度体系"
+   },
+   {
+    "k": "D",
+    "t": "能源消耗总量和强度双控制度体系"
+   }
+  ],
+  "ans": "C"
+ },
+ {
+  "id": 99,
+  "type": "single",
+  "module": "双碳政策与国际法规",
+  "stem": "《关于推进“人工智能+”能源高质量发展的实施意见》是由哪两个部门联合发布的？（）",
+  "opts": [
+   {
+    "k": "A",
+    "t": "科技部与工业和信息化部"
+   },
+   {
+    "k": "B",
+    "t": "国家发展改革委与工业和信息化部"
+   },
+   {
+    "k": "C",
+    "t": "国家发展改革委与国家能源局"
+   },
+   {
+    "k": "D",
+    "t": "国务院国资委与国家能源局"
+   }
+  ],
+  "ans": "C"
+ },
+ {
+  "id": 100,
+  "type": "single",
+  "module": "双碳政策与国际法规",
+  "stem": "《关于推进“人工智能+”能源高质量发展的实施意见》中提出，到哪一年能源领域人工智能专用技术与应用总体达到世界领先水平？（）",
+  "opts": [
+   {
+    "k": "A",
+    "t": "2025年"
+   },
+   {
+    "k": "B",
+    "t": "2027年"
+   },
+   {
+    "k": "C",
+    "t": "2030年"
+   },
+   {
+    "k": "D",
+    "t": "2035年"
+   }
+  ],
+  "ans": "C"
+ },
+ {
+  "id": 101,
+  "type": "single",
+  "module": "双碳政策与国际法规",
+  "stem": "《关于推进“人工智能+”能源高质量发展的实施意见》中部署的“人工智能+”能源应用场景共有多少个？（）",
+  "opts": [
+   {
+    "k": "A",
+    "t": "六个"
+   },
+   {
+    "k": "B",
+    "t": "七个"
+   },
+   {
+    "k": "C",
+    "t": "八个"
+   },
+   {
+    "k": "D",
+    "t": "九个"
+   }
+  ],
+  "ans": "C"
+ },
+ {
+  "id": 102,
+  "type": "single",
+  "module": "双碳政策与国际法规",
+  "stem": "下列哪一项不属于实施意见中明确的“人工智能+电网”典型应用场景？（）",
+  "opts": [
+   {
+    "k": "A",
+    "t": "电网智能规划设计与生产建设"
+   },
+   {
+    "k": "B",
+    "t": "电网调度运行"
+   },
+   {
+    "k": "C",
+    "t": "电力设备状态评价与智能运维"
+   },
+   {
+    "k": "D",
+    "t": "绿氢生产工艺智能寻优"
+   }
+  ],
+  "ans": "D"
+ },
+ {
+  "id": 103,
+  "type": "single",
+  "module": "双碳政策与国际法规",
+  "stem": "根据《关于推进“人工智能+”能源高质量发展的实施意见》，到哪一年能源与人工智能融合创新体系初步构建（）。",
+  "opts": [
+   {
+    "k": "A",
+    "t": "2025年"
+   },
+   {
+    "k": "B",
+    "t": "2026年"
+   },
+   {
+    "k": "C",
+    "t": "2027年"
+   },
+   {
+    "k": "D",
+    "t": "2028年"
+   }
+  ],
+  "ans": "C"
+ },
+ {
+  "id": 104,
+  "type": "single",
+  "module": "双碳政策与国际法规",
+  "stem": "发展新能源就近消纳的重要意义是（）。",
+  "opts": [
+   {
+    "k": "A",
+    "t": "促进新能源资源开发利用、满足企业绿色用能需求"
+   },
+   {
+    "k": "B",
+    "t": "提高新能源发电成本"
+   },
+   {
+    "k": "C",
+    "t": "减少企业绿色用能选择"
+   },
+   {
+    "k": "D",
+    "t": "降低能源资源利用效率"
+   }
+  ],
+  "ans": "A"
+ },
+ {
+  "id": 105,
+  "type": "single",
+  "module": "双碳政策与国际法规",
+  "stem": "根据《完善价格机制促进新能源发电就近消纳的通知》,项目具备分表计量条件时，应由（）在相关关口安装计量装置以准确计量各环节电量数据？",
+  "opts": [
+   {
+    "k": "A",
+    "t": "发电企业"
+   },
+   {
+    "k": "B",
+    "t": "用户企业"
+   },
+   {
+    "k": "C",
+    "t": "电网企业"
+   },
+   {
+    "k": "D",
+    "t": "储能企业"
+   }
+  ],
+  "ans": "C"
+ },
+ {
+  "id": 106,
+  "type": "single",
+  "module": "双碳政策与国际法规",
+  "stem": "根据《完善价格机制促进新能源发电就近消纳的通知》中“谁受益、谁负担”原则，以下哪项符合就近消纳项目的费用承担要求？（）",
+  "opts": [
+   {
+    "k": "A",
+    "t": "就近消纳项目无需承担输配电费"
+   },
+   {
+    "k": "B",
+    "t": "就近消纳项目公平承担输配电费等费用"
+   },
+   {
+    "k": "C",
+    "t": "未接入公共电网项目需缴纳稳定供应保障费用"
+   },
+   {
+    "k": "D",
+    "t": "未接入公共电网项目公平承担系统运行费"
+   }
+  ],
+  "ans": "B"
+ },
+ {
+  "id": 107,
+  "type": "single",
+  "module": "双碳政策与国际法规",
+  "stem": "根据《关于促进可再生能源绿色电力证书市场高质量发展的意见》,到2030年绿证市场的目标不包括以下哪项?（）",
+  "opts": [
+   {
+    "k": "A",
+    "t": "制度体系进一步健全"
+   },
+   {
+    "k": "B",
+    "t": "全社会自主消费绿色电力需求显著提升"
+   },
+   {
+    "k": "C",
+    "t": "绿证国际应用有效实现"
+   },
+   {
+    "k": "D",
+    "t": "可再生能源发电成本降至零"
+   }
+  ],
+  "ans": "D"
+ },
+ {
+  "id": 108,
+  "type": "single",
+  "module": "双碳政策与国际法规",
+  "stem": "根据《关于促进可再生能源 绿色电力证书市场高质量发展的意见》,以下哪项是促进绿证市场发展的措施？（）",
+  "opts": [
+   {
+    "k": "A",
+    "t": "完善绿证全生命周期闭环管理，规范绿证核销机制"
+   },
+   {
+    "k": "B",
+    "t": "开放绿证跨区域交易权限，取消交易额度限制"
+   },
+   {
+    "k": "C",
+    "t": "降低绿证申领门槛，扩大绿证适用范围"
+   },
+   {
+    "k": "D",
+    "t": "提高绿证交易价格，增加企业收益"
+   }
+  ],
+  "ans": "A"
+ },
+ {
+  "id": 109,
+  "type": "single",
+  "module": "双碳政策与国际法规",
+  "stem": "根据《关于促进可再生能源 绿色电力证书市场高质量发展的意见》以下哪项是推进绿色电力交易机制建设的内容？（）",
+  "opts": [
+   {
+    "k": "A",
+    "t": "仅推进年度绿色电力交易机制建设"
+   },
+   {
+    "k": "B",
+    "t": "推进多年、年度、月度以及月内绿色电力交易机制建设"
+   },
+   {
+    "k": "C",
+    "t": "不鼓励发用双方签订多年期购买协议"
+   },
+   {
+    "k": "D",
+    "t": "限制跨省跨区绿色电力供给"
+   }
+  ],
+  "ans": "B"
+ },
+ {
+  "id": 110,
+  "type": "single",
+  "module": "双碳政策与国际法规",
+  "stem": "根据《关于促进可再生能源 绿色电力证书市场高质量发展的意见》应如何推进绿色电力消费相关工作？（）",
+  "opts": [
+   {
+    "k": "A",
+    "t": "依法稳步推进绿证强制消费，逐步提高绿色电力消费比例并使用绿证核算"
+   },
+   {
+    "k": "B",
+    "t": "暂停绿证强制消费政策以观后效"
+   },
+   {
+    "k": "C",
+    "t": "降低绿色电力消费比例并弱化绿证作用"
+   },
+   {
+    "k": "D",
+    "t": "取消绿证核算制度改用其他方式"
+   }
+  ],
+  "ans": "A"
+ },
+ {
+  "id": 111,
+  "type": "single",
+  "module": "全国碳市场与碳交易",
+  "stem": "2025年4月，生态环境部印发的《关于做好2025年全国碳排放权交易市场有关工作的通知》明确将全国碳排放权交易市场行业覆盖范围扩大，包含哪些行业？（）",
+  "opts": [
+   {
+    "k": "A",
+    "t": "发电、钢铁、水泥行业"
+   },
+   {
+    "k": "B",
+    "t": "发电、钢铁、水泥、铝冶炼行业"
+   },
+   {
+    "k": "C",
+    "t": "钢铁、水泥、铝冶炼行业"
+   },
+   {
+    "k": "D",
+    "t": "发电、水泥、铝冶炼行业"
+   }
+  ],
+  "ans": "B"
+ },
+ {
+  "id": 112,
+  "type": "single",
+  "module": "全国碳市场与碳交易",
+  "stem": "全国温室气体自愿减排交易市场正式启动的时间是（）。",
+  "opts": [
+   {
+    "k": "A",
+    "t": "2023年1月"
+   },
+   {
+    "k": "B",
+    "t": "2024年1月"
+   },
+   {
+    "k": "C",
+    "t": "2025年1月"
+   },
+   {
+    "k": "D",
+    "t": "2026年1月"
+   }
+  ],
+  "ans": "B"
+ },
+ {
+  "id": 113,
+  "type": "single",
+  "module": "全国碳市场与碳交易",
+  "stem": "2024年1月国务院颁布的《碳排放权2024年1月国务院颁布的《碳排放权交易管理暂行条例》自何时起施行？（）",
+  "opts": [
+   {
+    "k": "A",
+    "t": "2024年1月"
+   },
+   {
+    "k": "B",
+    "t": "2024年3月"
+   },
+   {
+    "k": "C",
+    "t": "2024年5月"
+   },
+   {
+    "k": "D",
+    "t": "2024年7月"
+   }
+  ],
+  "ans": "C"
+ },
+ {
+  "id": 114,
+  "type": "single",
+  "module": "双碳政策与国际法规",
+  "stem": "企业可持续风险、机遇和影响的来源包括（ ）",
+  "opts": [
+   {
+    "k": "A",
+    "t": "仅企业自身的经营活动"
+   },
+   {
+    "k": "B",
+    "t": "仅上下游价值链活动"
+   },
+   {
+    "k": "C",
+    "t": "企业自身的经营活动和上下游价值链活动"
+   },
+   {
+    "k": "D",
+    "t": "以上均不正确"
+   }
+  ],
+  "ans": "C"
+ },
+ {
+  "id": 115,
+  "type": "single",
+  "module": "双碳政策与国际法规",
+  "stem": "企业在发生重大事件或者情况发生重大变化时，应当重新评估其整个价值链中所有受影响的可持续风险、机遇和影响的范围。下列选项中，通常不属于此类重大事件或者情况重大变化的是？（）",
+  "opts": [
+   {
+    "k": "A",
+    "t": "企业的价值链发生重大变化"
+   },
+   {
+    "k": "B",
+    "t": "企业的业务模式、活动或者组织结构发生重大变化"
+   },
+   {
+    "k": "C",
+    "t": "企业的可持续风险、机遇和影响发生重大变化"
+   },
+   {
+    "k": "D",
+    "t": "企业的员工数量略有增加"
+   }
+  ],
+  "ans": "D"
+ },
+ {
+  "id": 116,
+  "type": "single",
+  "module": "双碳政策与国际法规",
+  "stem": "根据《企业可持续披露准则——基本准则（试行）》应用指南，企业应如何处理可持续议题的定期管理（）。",
+  "opts": [
+   {
+    "k": "A",
+    "t": "无需定期复核"
+   },
+   {
+    "k": "B",
+    "t": "每年定期复核更新议题"
+   },
+   {
+    "k": "C",
+    "t": "每三年复核一次"
+   },
+   {
+    "k": "D",
+    "t": "仅在利益相关方提出要求时复核"
+   }
+  ],
+  "ans": "B"
+ },
+ {
+  "id": 117,
+  "type": "single",
+  "module": "双碳政策与国际法规",
+  "stem": "企业可持续信息披露的目标，是向信息使用者提供重要的（）信息，以便其作出经济决策、资源配置或者其他决策。",
+  "opts": [
+   {
+    "k": "A",
+    "t": "财务状况、经营成果和现金流量"
+   },
+   {
+    "k": "B",
+    "t": "市场竞争格局、行业发展趋势和技术创新动态"
+   },
+   {
+    "k": "C",
+    "t": "可持续风险、机遇和影响"
+   },
+   {
+    "k": "D",
+    "t": "公司治理结构、股权分布和管理层变动"
+   }
+  ],
+  "ans": "C"
+ },
+ {
+  "id": 118,
+  "type": "single",
+  "module": "双碳政策与国际法规",
+  "stem": "根据《企业可持续披露准则——基本准则（试行）》以下哪项不属于环境方面的可持续议题？（）",
+  "opts": [
+   {
+    "k": "A",
+    "t": "气候"
+   },
+   {
+    "k": "B",
+    "t": "污染"
+   },
+   {
+    "k": "C",
+    "t": "治理"
+   },
+   {
+    "k": "D",
+    "t": "生物多样性与生态系统"
+   }
+  ],
+  "ans": "C"
+ },
+ {
+  "id": 119,
+  "type": "single",
+  "module": "双碳政策与国际法规",
+  "stem": "根据《企业可持续披露准则——基本准则（试行）》以下哪项不属于社会方面的议题？（）",
+  "opts": [
+   {
+    "k": "A",
+    "t": "员工权益保护"
+   },
+   {
+    "k": "B",
+    "t": "社区资源和关系管理"
+   },
+   {
+    "k": "C",
+    "t": "生物多样性与生态系统"
+   },
+   {
+    "k": "D",
+    "t": "乡村振兴"
+   }
+  ],
+  "ans": "C"
+ },
+ {
+  "id": 120,
+  "type": "single",
+  "module": "双碳政策与国际法规",
+  "stem": "根据《企业可持续披露准则——基本准则（试行）》企业披露的可持续信息应当包括的核心要素不包括以下哪项？（）",
+  "opts": [
+   {
+    "k": "A",
+    "t": "治理"
+   },
+   {
+    "k": "B",
+    "t": "战略"
+   },
+   {
+    "k": "C",
+    "t": "财务绩效"
+   },
+   {
+    "k": "D",
+    "t": "指标和目标"
+   }
+  ],
+  "ans": "C"
+ },
+ {
+  "id": 121,
+  "type": "single",
+  "module": "双碳政策与国际法规",
+  "stem": "根据《企业可持续披露准则——基本准则（试行）》应用指南披露的可持续风险和机遇影响企业发展前景的中期时间范围是多久？（）",
+  "opts": [
+   {
+    "k": "A",
+    "t": "可持续信息报告期间结束后1年以内（含1年）"
+   },
+   {
+    "k": "B",
+    "t": "可持续信息报告期间结束后1年至5年（含5年）"
+   },
+   {
+    "k": "C",
+    "t": "可持续信息报告期间结束后5年以上"
+   },
+   {
+    "k": "D",
+    "t": "可持续信息报告期间结束后3年至7年（含7年）"
+   }
+  ],
+  "ans": "B"
+ },
+ {
+  "id": 122,
+  "type": "single",
+  "module": "双碳政策与国际法规",
+  "stem": "根据《企业可持续披露准则——基本准则（试行）》应用指南，披露的可持续风险和机遇可合理预期影响企业发展前景的短期时间范围是指可持续信息报告期间结束后多久？（）",
+  "opts": [
+   {
+    "k": "A",
+    "t": "1年以内（含1年）"
+   },
+   {
+    "k": "B",
+    "t": "1年至5年（含5年）"
+   },
+   {
+    "k": "C",
+    "t": "5年以上"
+   },
+   {
+    "k": "D",
+    "t": "3年以内（含3年）"
+   }
+  ],
+  "ans": "A"
+ },
+ {
+  "id": 123,
+  "type": "single",
+  "module": "能源基础与双碳常识",
+  "stem": "化石能源按品种分为哪几大类？（）",
+  "opts": [
+   {
+    "k": "A",
+    "t": "煤品、油品、水电"
+   },
+   {
+    "k": "B",
+    "t": "煤品、油品、天然气"
+   },
+   {
+    "k": "C",
+    "t": "木材、油品、天然气"
+   },
+   {
+    "k": "D",
+    "t": "煤品、太阳能、天然气"
+   }
+  ],
+  "ans": "B"
+ },
+ {
+  "id": 124,
+  "type": "single",
+  "module": "全国碳市场与碳交易",
+  "stem": "全国碳排放权交易系统交易客户端的“挂牌交易”，是可以对交易中的标的物进行挂牌交易买入和卖出操作，查看委托和持仓信息。挂牌交易的单笔买卖应当小于多少万吨二氧化碳当量？（）",
+  "opts": [
+   {
+    "k": "A",
+    "t": "5"
+   },
+   {
+    "k": "B",
+    "t": "10"
+   },
+   {
+    "k": "C",
+    "t": "20"
+   },
+   {
+    "k": "D",
+    "t": "50"
+   }
+  ],
+  "ans": "B"
+ },
+ {
+  "id": 125,
+  "type": "single",
+  "module": "全国碳市场与碳交易",
+  "stem": "配额碳资产是指通过（）或参与配额交易而获得的碳资产，这种资产是在“总量控制与交易机制”下产生的。",
+  "opts": [
+   {
+    "k": "A",
+    "t": "企业自主申报"
+   },
+   {
+    "k": "B",
+    "t": "政府机构分配"
+   },
+   {
+    "k": "C",
+    "t": "碳信用购买"
+   },
+   {
+    "k": "D",
+    "t": "碳排放权拍卖"
+   }
+  ],
+  "ans": "B"
+ },
+ {
+  "id": 126,
+  "type": "single",
+  "module": "全国碳市场与碳交易",
+  "stem": "以下哪项不是碳金融的主要功能（ ）。",
+  "opts": [
+   {
+    "k": "A",
+    "t": "发挥中介功能、降低交易成本"
+   },
+   {
+    "k": "B",
+    "t": "发现价格，提供决策支持"
+   },
+   {
+    "k": "C",
+    "t": "减排投资收益最大化"
+   },
+   {
+    "k": "D",
+    "t": "加速低碳技术的转移和扩散"
+   }
+  ],
+  "ans": "B"
+ },
+ {
+  "id": 127,
+  "type": "single",
+  "module": "全国碳市场与碳交易",
+  "stem": "在应对全球气候变暖的行动中，下列（ ）途径对于降低碳排放强度、推动绿色低碳转型作用最显著。",
+  "opts": [
+   {
+    "k": "A",
+    "t": "增加天然气等化石燃料的进口与使用量"
+   },
+   {
+    "k": "B",
+    "t": "积极推广地热能、生物质能等清洁能源"
+   },
+   {
+    "k": "C",
+    "t": "拓展煤炭应用场景"
+   },
+   {
+    "k": "D",
+    "t": "提高石油提炼技术，使石油燃烧更充分"
+   }
+  ],
+  "ans": "B"
+ },
+ {
+  "id": 128,
+  "type": "single",
+  "module": "全国碳市场与碳交易",
+  "stem": "（ ）属于通过增强生态系统碳汇功能来应对全球变暖的措施。",
+  "opts": [
+   {
+    "k": "A",
+    "t": "砍伐森林建造城市公园"
+   },
+   {
+    "k": "B",
+    "t": "开展大规模的植树造林活动"
+   },
+   {
+    "k": "C",
+    "t": "在草原地区过度放牧，提高畜产品产量"
+   },
+   {
+    "k": "D",
+    "t": "围垦湿地，扩大农业种植面积"
+   }
+  ],
+  "ans": "B"
+ },
+ {
+  "id": 129,
+  "type": "single",
+  "module": "全国碳市场与碳交易",
+  "stem": "从国家治理角度分析，下列（ ）措施能够有效促进气候治理行动的开展。",
+  "opts": [
+   {
+    "k": "A",
+    "t": "提高传统化石能源的生产配额"
+   },
+   {
+    "k": "B",
+    "t": "制定严格的温室气体排放限额标准并监督执行"
+   },
+   {
+    "k": "C",
+    "t": "对能源消耗量大的企业实施税收减免政策"
+   },
+   {
+    "k": "D",
+    "t": "削减用于低碳技术研发的财政投入"
+   }
+  ],
+  "ans": "B"
+ },
+ {
+  "id": 130,
+  "type": "single",
+  "module": "全国碳市场与碳交易",
+  "stem": "下列能源中，属于可再生能源的是（）。",
+  "opts": [
+   {
+    "k": "A",
+    "t": "煤炭"
+   },
+   {
+    "k": "B",
+    "t": "氢能"
+   },
+   {
+    "k": "C",
+    "t": "石油"
+   },
+   {
+    "k": "D",
+    "t": "天然气"
+   }
+  ],
+  "ans": "B"
+ },
+ {
+  "id": 131,
+  "type": "single",
+  "module": "全国碳市场与碳交易",
+  "stem": "碳资产作为一种环境资源资产，有三大特点，分别是（ ）、消耗性和投资性的特点。",
+  "opts": [
+   {
+    "k": "A",
+    "t": "金融属性"
+   },
+   {
+    "k": "B",
+    "t": "稀缺性"
+   },
+   {
+    "k": "C",
+    "t": "商品属性"
+   },
+   {
+    "k": "D",
+    "t": "可透支性"
+   }
+  ],
+  "ans": "B"
+ },
+ {
+  "id": 132,
+  "type": "single",
+  "module": "全国碳市场与碳交易",
+  "stem": "碳资产作为一种金融资产，具有（）和金融属性的双重特性。",
+  "opts": [
+   {
+    "k": "A",
+    "t": "交换性"
+   },
+   {
+    "k": "B",
+    "t": "流通性"
+   },
+   {
+    "k": "C",
+    "t": "稳定性"
+   },
+   {
+    "k": "D",
+    "t": "商品属性"
+   }
+  ],
+  "ans": "D"
+ },
+ {
+  "id": 133,
+  "type": "single",
+  "module": "全国碳市场与碳交易",
+  "stem": "企业制定碳排放交易方案时，需要考虑多种风险因素。在以下选项中，（ ）不属于企业制定碳排放交易方案时常见的风险。",
+  "opts": [
+   {
+    "k": "A",
+    "t": "市场需求波动风险"
+   },
+   {
+    "k": "B",
+    "t": "技术创新不足导致减排困难风险"
+   },
+   {
+    "k": "C",
+    "t": "企业内部管理风险"
+   },
+   {
+    "k": "D",
+    "t": "国际贸易政策变化风险"
+   }
+  ],
+  "ans": "C"
+ },
+ {
+  "id": 134,
+  "type": "single",
+  "module": "全国碳市场与碳交易",
+  "stem": "（ ）在监测、报告与核查（MRV）制度中，哪个选项最适合作为核查环节的主要执行者？",
+  "opts": [
+   {
+    "k": "A",
+    "t": "企业内部的财务部门"
+   },
+   {
+    "k": "B",
+    "t": "政府的税务部门"
+   },
+   {
+    "k": "C",
+    "t": "具有资质的第三方核查机构"
+   },
+   {
+    "k": "D",
+    "t": "行业协会"
+   }
+  ],
+  "ans": "D"
+ },
+ {
+  "id": 135,
+  "type": "single",
+  "module": "全国碳市场与碳交易",
+  "stem": "全国碳市场配额分配量的测算主要遵循（ ）原则。",
+  "opts": [
+   {
+    "k": "A",
+    "t": "总量控制原则"
+   },
+   {
+    "k": "B",
+    "t": "效率原则"
+   },
+   {
+    "k": "C",
+    "t": "环境效益原则"
+   },
+   {
+    "k": "D",
+    "t": "市场竞争原则"
+   }
+  ],
+  "ans": "A"
+ },
+ {
+  "id": 136,
+  "type": "single",
+  "module": "全国碳市场与碳交易",
+  "stem": "以下（ ）不是全国碳市场配额分配的主要方式。",
+  "opts": [
+   {
+    "k": "A",
+    "t": "基于历史排放法"
+   },
+   {
+    "k": "B",
+    "t": "基于行业平均排放强度法"
+   },
+   {
+    "k": "C",
+    "t": "拍卖分配"
+   },
+   {
+    "k": "D",
+    "t": "免费分配"
+   }
+  ],
+  "ans": "C"
+ },
+ {
+  "id": 137,
+  "type": "single",
+  "module": "产品碳足迹GB/T 24067",
+  "stem": "“碳足迹”指的是（）。",
+  "opts": [
+   {
+    "k": "A",
+    "t": "碳排放个体一年内的移动路线"
+   },
+   {
+    "k": "B",
+    "t": "个人/个体活动引起的温室气体/二氧化碳排放量"
+   },
+   {
+    "k": "C",
+    "t": "所有参与碳循环过程的物体都是碳足迹"
+   },
+   {
+    "k": "D",
+    "t": "二氧化碳升空的轨迹"
+   }
+  ],
+  "ans": "B"
+ },
+ {
+  "id": 138,
+  "type": "single",
+  "module": "碳足迹标识认证试点",
+  "stem": "截至2025年9月，我国市场监管总局等部门共发布了（）批产品碳足迹标识认证试点认证目录。",
+  "opts": [
+   {
+    "k": "A",
+    "t": "一"
+   },
+   {
+    "k": "B",
+    "t": "二"
+   },
+   {
+    "k": "C",
+    "t": "三"
+   },
+   {
+    "k": "D",
+    "t": "四"
+   }
+  ],
+  "ans": "A"
+ },
+ {
+  "id": 139,
+  "type": "single",
+  "module": "碳足迹标识认证试点",
+  "stem": "我国工业和信息化部等四部门确定了（）项工业产品碳足迹核算规则团体标准推荐清单（第二批），并予以公布。",
+  "opts": [
+   {
+    "k": "A",
+    "t": "15"
+   },
+   {
+    "k": "B",
+    "t": "23"
+   },
+   {
+    "k": "C",
+    "t": "25"
+   },
+   {
+    "k": "D",
+    "t": "40"
+   }
+  ],
+  "ans": "B"
+ },
+ {
+  "id": 140,
+  "type": "single",
+  "module": "产品碳足迹GB/T 24067",
+  "stem": "下列对产品碳足迹功能单位的描述无误的是（）。",
+  "opts": [
+   {
+    "k": "A",
+    "t": "量化产品参数功能的基准单位"
+   },
+   {
+    "k": "B",
+    "t": "量化产品碳足迹数值的基准单位"
+   },
+   {
+    "k": "C",
+    "t": "量化产品技术成熟度的基准单位"
+   },
+   {
+    "k": "D",
+    "t": "量化产品系统功能的基准单位"
+   }
+  ],
+  "ans": "D"
+ },
+ {
+  "id": 141,
+  "type": "single",
+  "module": "产品碳足迹GB/T 24067",
+  "stem": "下列对产品碳足迹声明位的描述无误的是（）。",
+  "opts": [
+   {
+    "k": "A",
+    "t": "量化产品碳抵消的单位"
+   },
+   {
+    "k": "B",
+    "t": "声明产品系统边界的单位"
+   },
+   {
+    "k": "C",
+    "t": "声明产品规格的单位"
+   },
+   {
+    "k": "D",
+    "t": "量化产品部分碳足迹的基准单位"
+   }
+  ],
+  "ans": "D"
+ },
+ {
+  "id": 142,
+  "type": "single",
+  "module": "产品碳足迹GB/T 24067",
+  "stem": "下列哪项是2023年的全国电力平均碳足迹因子？（）",
+  "opts": [
+   {
+    "k": "A",
+    "t": "0.6205 kgCO2e/kWh"
+   },
+   {
+    "k": "B",
+    "t": "0.4403 kgCO2e/kWh"
+   },
+   {
+    "k": "C",
+    "t": "0.4792 kgCO2e/kWh"
+   },
+   {
+    "k": "D",
+    "t": "0.5962 kgCO2e/kWh"
+   }
+  ],
+  "ans": "A"
+ },
+ {
+  "id": 143,
+  "type": "single",
+  "module": "产品碳足迹GB/T 24067",
+  "stem": "下列说法正确的是（）。",
+  "opts": [
+   {
+    "k": "A",
+    "t": "国家产品碳足迹标识认证的权威认证机构必须来自国际组织"
+   },
+   {
+    "k": "B",
+    "t": "国家产品碳足迹标识认证的权威认证机构必须是由国家认监委遴选的机构"
+   },
+   {
+    "k": "C",
+    "t": "国家产品碳足迹标识认证的权威认证机构必须由生产企业自行指定"
+   },
+   {
+    "k": "D",
+    "t": "国家产品碳足迹标识认证无需第三方审核"
+   }
+  ],
+  "ans": "B"
+ },
+ {
+  "id": 144,
+  "type": "single",
+  "module": "产品碳足迹GB/T 24067",
+  "stem": "在GB/T 24067-2024标准中，多产品系统的碳排放分配方法优先（）。",
+  "opts": [
+   {
+    "k": "A",
+    "t": "仅计入主要产品"
+   },
+   {
+    "k": "B",
+    "t": "按市场价格分配"
+   },
+   {
+    "k": "C",
+    "t": "基于物理因果关系"
+   },
+   {
+    "k": "D",
+    "t": "随意平均分配"
+   }
+  ],
+  "ans": "C"
+ },
+ {
+  "id": 145,
+  "type": "single",
+  "module": "产品碳足迹GB/T 24067",
+  "stem": "以下选项中，符合GB/T 24067-2024标准对次级数据使用的合规要求的是（）。",
+  "opts": [
+   {
+    "k": "A",
+    "t": "无需说明来源"
+   },
+   {
+    "k": "B",
+    "t": "禁止使用次级数据"
+   },
+   {
+    "k": "C",
+    "t": "次级数据仅限国际数据库"
+   },
+   {
+    "k": "D",
+    "t": "推荐使用本土化数据库"
+   }
+  ],
+  "ans": "D"
+ },
+ {
+  "id": 146,
+  "type": "single",
+  "module": "碳足迹标识认证试点",
+  "stem": "产品碳足迹标识认证试点工作的认证参与机构需遵循（）的总体要求。",
+  "opts": [
+   {
+    "k": "A",
+    "t": "积极参与多方构建"
+   },
+   {
+    "k": "B",
+    "t": "因地制宜多方参与"
+   },
+   {
+    "k": "C",
+    "t": "统一部署科学有序"
+   },
+   {
+    "k": "D",
+    "t": "因地制宜科学有序"
+   }
+  ],
+  "ans": "C"
+ },
+ {
+  "id": 147,
+  "type": "single",
+  "module": "碳足迹标识认证试点",
+  "stem": "下列选项中，（）属于产品碳足迹标识认证试点参与机构与开展试点省份的对接方式。",
+  "opts": [
+   {
+    "k": "A",
+    "t": "划定特定区域后由市场监管总局统一安排"
+   },
+   {
+    "k": "B",
+    "t": "自行开展对接工作"
+   },
+   {
+    "k": "C",
+    "t": "划定不同区域后开展对接工作"
+   },
+   {
+    "k": "D",
+    "t": "根据实际情况分配"
+   }
+  ],
+  "ans": "B"
+ },
+ {
+  "id": 148,
+  "type": "single",
+  "module": "碳足迹标识认证试点",
+  "stem": "下列选项中，（）是参与产品碳足迹标识认证的检查员需具备的资质与能力。",
+  "opts": [
+   {
+    "k": "A",
+    "t": "取得本科及以上学历"
+   },
+   {
+    "k": "B",
+    "t": "取得市场监管总局确定的相应领域的自愿型产品认证检查员注册资格"
+   },
+   {
+    "k": "C",
+    "t": "取得中级工程师职称"
+   },
+   {
+    "k": "D",
+    "t": "取得高级工程师职称"
+   }
+  ],
+  "ans": "B"
+ },
+ {
+  "id": 149,
+  "type": "single",
+  "module": "碳足迹标识认证试点",
+  "stem": "关于市场监管总局在产品碳足迹标识认证试点工作中的职责，下列说法中正确的是（）。",
+  "opts": [
+   {
+    "k": "A",
+    "t": "统一管理、认证结果采信"
+   },
+   {
+    "k": "B",
+    "t": "统一管理、监督和认证结果采信"
+   },
+   {
+    "k": "C",
+    "t": "统一管理、监督和推广使用"
+   },
+   {
+    "k": "D",
+    "t": "统一管理、监督和综合协调"
+   }
+  ],
+  "ans": "D"
+ },
+ {
+  "id": 150,
+  "type": "single",
+  "module": "碳足迹标识认证试点",
+  "stem": "各试点所在的省级市场监管部门在产品碳足迹标识认证工作中的角色是（）。",
+  "opts": [
+   {
+    "k": "A",
+    "t": "协调部门"
+   },
+   {
+    "k": "B",
+    "t": "执行部门"
+   },
+   {
+    "k": "C",
+    "t": "牵头部门"
+   },
+   {
+    "k": "D",
+    "t": "配合部门"
+   }
+  ],
+  "ans": "C"
+ },
+ {
+  "id": 151,
+  "type": "single",
+  "module": "碳足迹标识认证试点",
+  "stem": "下列关于国家产品碳足迹标识认证的实施规则如何发布的说法中，正确的是（）。",
+  "opts": [
+   {
+    "k": "A",
+    "t": "仅发布具体产品专用实施规则"
+   },
+   {
+    "k": "B",
+    "t": "依据各地现有标准指执行即可"
+   },
+   {
+    "k": "C",
+    "t": "发布《产品碳足迹标识认证通用实施规则（试行）》+具体产品专用实施规则"
+   },
+   {
+    "k": "D",
+    "t": "仅发布实施《产品碳足迹标识认证通用实施规则（试行）》"
+   }
+  ],
+  "ans": "C"
+ },
+ {
+  "id": 152,
+  "type": "single",
+  "module": "碳足迹标识认证试点",
+  "stem": "以下选项中（）是产品碳足迹标识认证的认证模式。",
+  "opts": [
+   {
+    "k": "A",
+    "t": "初始检查+产品碳足迹核查"
+   },
+   {
+    "k": "B",
+    "t": "初始检查+产品碳足迹核查+获证后监督"
+   },
+   {
+    "k": "C",
+    "t": "产品碳足迹核查+获证后监督"
+   },
+   {
+    "k": "D",
+    "t": "文件评审+现场检查"
+   }
+  ],
+  "ans": "B"
+ },
+ {
+  "id": 153,
+  "type": "single",
+  "module": "碳足迹标识认证试点",
+  "stem": "产品碳足迹的产品认证单元的划分依据是（）。",
+  "opts": [
+   {
+    "k": "A",
+    "t": "同一生产企业、同种产品、同一规格型号"
+   },
+   {
+    "k": "B",
+    "t": "不同生产场地、同种产品、同一规格型号"
+   },
+   {
+    "k": "C",
+    "t": "同一生产企业、同种产品、不同规格型号"
+   },
+   {
+    "k": "D",
+    "t": "不同生产场地、同种产品、不同规格型号"
+   }
+  ],
+  "ans": "A"
+ },
+ {
+  "id": 154,
+  "type": "single",
+  "module": "碳足迹标识认证试点",
+  "stem": "下列关于产品碳足迹核查进行的时间点，描述正确的是（）。",
+  "opts": [
+   {
+    "k": "A",
+    "t": "现场检查前、或与现场检查同时进行"
+   },
+   {
+    "k": "B",
+    "t": "现场检查前"
+   },
+   {
+    "k": "C",
+    "t": "现场检查时"
+   },
+   {
+    "k": "D",
+    "t": "现场检查后"
+   }
+  ],
+  "ans": "A"
+ },
+ {
+  "id": 155,
+  "type": "single",
+  "module": "碳足迹标识认证试点",
+  "stem": "（）是申请产品碳足迹认证必须提交的文件。",
+  "opts": [
+   {
+    "k": "A",
+    "t": "财务报表"
+   },
+   {
+    "k": "B",
+    "t": "员工花名册"
+   },
+   {
+    "k": "C",
+    "t": "广告宣传方案"
+   },
+   {
+    "k": "D",
+    "t": "第三方核查报告"
+   }
+  ],
+  "ans": "D"
+ },
+ {
+  "id": 156,
+  "type": "single",
+  "module": "碳足迹标识认证试点",
+  "stem": "以下选项中，符合GB/T 24067-2024在碳足迹核算中规定的“取舍规则”阈值的是（）。",
+  "opts": [
+   {
+    "k": "A",
+    "t": "环境贡献率＜7%且排放量＜10%可忽略"
+   },
+   {
+    "k": "B",
+    "t": "环境贡献率＜5%且排放量＜10%可忽略"
+   },
+   {
+    "k": "C",
+    "t": "环境贡献率＜3%且排放量＜8%可忽略"
+   },
+   {
+    "k": "D",
+    "t": "环境贡献率＜1%且排放量＜5%可忽略"
+   }
+  ],
+  "ans": "D"
+ },
+ {
+  "id": 157,
+  "type": "single",
+  "module": "碳足迹标识认证试点",
+  "stem": "下列说法正确的是（）。",
+  "opts": [
+   {
+    "k": "A",
+    "t": "国家产品碳足迹标识认证试点工作期限是1年"
+   },
+   {
+    "k": "B",
+    "t": "国家产品碳足迹标识认证试点工作期限是2年"
+   },
+   {
+    "k": "C",
+    "t": "国家产品碳足迹标识认证试点工作期限是3年"
+   },
+   {
+    "k": "D",
+    "t": "国家产品碳足迹标识认证试点工作期限是4年"
+   }
+  ],
+  "ans": "C"
+ },
+ {
+  "id": 158,
+  "type": "single",
+  "module": "产品碳足迹GB/T 24067",
+  "stem": "根据GB/T 24067-2024《温室气体 产品碳足迹量化要求和指南》，以下说法正确的是（）。",
+  "opts": [
+   {
+    "k": "A",
+    "t": "最重要的单元过程是那些对产品碳足迹贡献度不低于95%的单元过程"
+   },
+   {
+    "k": "B",
+    "t": "最重要的单元过程是那些对产品碳足迹贡献度不低于90%的单元过程"
+   },
+   {
+    "k": "C",
+    "t": "最重要的单元过程是那些对产品碳足迹贡献度不低于85%的单元过程"
+   },
+   {
+    "k": "D",
+    "t": "最重要的单元过程是那些对产品碳足迹贡献度不低于80%的单元过程"
+   }
+  ],
+  "ans": "D"
+ },
+ {
+  "id": 159,
+  "type": "single",
+  "module": "产品碳足迹GB/T 24067",
+  "stem": "根据GB/T 24067-2024《温室气体 产品碳足迹量化要求和指南》，关于系统边界的描述正确的是（）。",
+  "opts": [
+   {
+    "k": "A",
+    "t": "通过一组准则确定哪些单元过程属于产品系统的一部分，即为系统边界"
+   },
+   {
+    "k": "B",
+    "t": "通过两组准则确定哪些单元过程属于产品系统的一部分，即为系统边界"
+   },
+   {
+    "k": "C",
+    "t": "通过三组准则确定哪些单元过程属于产品系统的一部分，即为系统边界"
+   },
+   {
+    "k": "D",
+    "t": "通过四组准则确定哪些单元过程属于产品系统的一部分，即为系统边界"
+   }
+  ],
+  "ans": "A"
+ },
+ {
+  "id": 160,
+  "type": "single",
+  "module": "产品碳足迹GB/T 24067",
+  "stem": "下列选项中，（）属于GB/T 24067-2024产品碳足迹结果解释中的“显著环节”。",
+  "opts": [
+   {
+    "k": "A",
+    "t": "设备的维护记录"
+   },
+   {
+    "k": "B",
+    "t": "员工工资"
+   },
+   {
+    "k": "C",
+    "t": "分销渠道"
+   },
+   {
+    "k": "D",
+    "t": "生命周期阶段、单元过程或流"
+   }
+  ],
+  "ans": "D"
+ },
+ {
+  "id": 161,
+  "type": "single",
+  "module": "产品碳足迹GB/T 24067",
+  "stem": "下列选项中，代表产品碳足迹计算公式中系统边界内各功能单位(声明单位)中第i种活动的GHG排放和清除相关数据(包括初级数据和次级数据)的是（）。",
+  "opts": [
+   {
+    "k": "A",
+    "t": "GWP_j"
+   },
+   {
+    "k": "B",
+    "t": "AD_i"
+   },
+   {
+    "k": "C",
+    "t": "CFP_GHG"
+   },
+   {
+    "k": "D",
+    "t": "EF_LCA,i,j"
+   }
+  ],
+  "ans": "B"
+ },
+ {
+  "id": 162,
+  "type": "single",
+  "module": "产品碳足迹GB/T 24067",
+  "stem": "以下关于产品碳足迹影响评价中使用的GWP值的说法正确的是（ ）。",
+  "opts": [
+   {
+    "k": "A",
+    "t": "GWP的默认时间范围是50年"
+   },
+   {
+    "k": "B",
+    "t": "GWP的默认时间范围是100年"
+   },
+   {
+    "k": "C",
+    "t": "GWP的默认时间范围是200年"
+   },
+   {
+    "k": "D",
+    "t": "GWP的默认时间范围是300年"
+   }
+  ],
+  "ans": "B"
+ },
+ {
+  "id": 163,
+  "type": "single",
+  "module": "产品碳足迹GB/T 24067",
+  "stem": "GB/T 24067-2024标准中规定的产品碳足迹的核算边界共有（）类。",
+  "opts": [
+   {
+    "k": "A",
+    "t": "4"
+   },
+   {
+    "k": "B",
+    "t": "3"
+   },
+   {
+    "k": "C",
+    "t": "2"
+   },
+   {
+    "k": "D",
+    "t": "1"
+   }
+  ],
+  "ans": "C"
+ },
+ {
+  "id": 164,
+  "type": "single",
+  "module": "产品碳足迹GB/T 24067",
+  "stem": "在GB/T 24067-2024中，“生命周期视角”原则需涵盖（ ）。",
+  "opts": [
+   {
+    "k": "A",
+    "t": "原材料获取、生产、使用及生命末期处理等全阶段"
+   },
+   {
+    "k": "B",
+    "t": "生产和销售阶段"
+   },
+   {
+    "k": "C",
+    "t": "仅生产阶段"
+   },
+   {
+    "k": "D",
+    "t": "仅使用阶段"
+   }
+  ],
+  "ans": "A"
+ },
+ {
+  "id": 165,
+  "type": "single",
+  "module": "产品碳足迹GB/T 24067",
+  "stem": "2023年电力碳足迹因子数据是生态环境部首次以（）形式发布的，填补了数据缺口。",
+  "opts": [
+   {
+    "k": "A",
+    "t": "文件"
+   },
+   {
+    "k": "B",
+    "t": "公告"
+   },
+   {
+    "k": "C",
+    "t": "函件"
+   },
+   {
+    "k": "D",
+    "t": "报告"
+   }
+  ],
+  "ans": "B"
+ },
+ {
+  "id": 166,
+  "type": "single",
+  "module": "产品碳足迹GB/T 24067",
+  "stem": "根据GB/T 24067-2024《温室气体 产品碳足迹量化要求和指南》，下列关于系统边界设定的描述正确的是（）。",
+  "opts": [
+   {
+    "k": "A",
+    "t": "使用阶段的单元过程允许被排除"
+   },
+   {
+    "k": "B",
+    "t": "生产阶段的单元过程允许被排除"
+   },
+   {
+    "k": "C",
+    "t": "对结论无显著影响的单元过程允许被排除"
+   },
+   {
+    "k": "D",
+    "t": "对结论有显著影响的单元过程允许被排除"
+   }
+  ],
+  "ans": "C"
+ },
+ {
+  "id": 167,
+  "type": "single",
+  "module": "产品碳足迹GB/T 24067",
+  "stem": "GB/T 24067-2024《温室气体 产品碳足迹量化要求和指南》对产品碳足迹的定义是（）。",
+  "opts": [
+   {
+    "k": "A",
+    "t": "每个单元过程中的 GHG 排放量和 GHG 清除量之和，以二氧化碳当量表示"
+   },
+   {
+    "k": "B",
+    "t": "产品系统中的 GHG 清除量之和，以二氧化碳当量表示"
+   },
+   {
+    "k": "C",
+    "t": "产品系统中的 GHG 排放量之和，以二氧化碳当量表示"
+   },
+   {
+    "k": "D",
+    "t": "产品系统中的 GHG 排放量和 GHG 清除量之和，以二氧化碳当量表示"
+   }
+  ],
+  "ans": "D"
+ },
+ {
+  "id": 168,
+  "type": "single",
+  "module": "产品碳足迹GB/T 24067",
+  "stem": "以下哪项是被用于产品部分碳足迹量化的基准单位？（）",
+  "opts": [
+   {
+    "k": "A",
+    "t": "基本流"
+   },
+   {
+    "k": "B",
+    "t": "基准流"
+   },
+   {
+    "k": "C",
+    "t": "功能单位"
+   },
+   {
+    "k": "D",
+    "t": "声明单位"
+   }
+  ],
+  "ans": "D"
+ },
+ {
+  "id": 169,
+  "type": "single",
+  "module": "产品碳足迹GB/T 24067",
+  "stem": "在GB/T 24067-2024标准中，（）是二氧化碳当量的量化依据。",
+  "opts": [
+   {
+    "k": "A",
+    "t": "产品碳足迹"
+   },
+   {
+    "k": "B",
+    "t": "温室气体清除量"
+   },
+   {
+    "k": "C",
+    "t": "全球增温潜势（GWP）"
+   },
+   {
+    "k": "D",
+    "t": "全球温度变化潜势（GTP）"
+   }
+  ],
+  "ans": "C"
+ },
+ {
+  "id": 170,
+  "type": "single",
+  "module": "产品碳足迹GB/T 24067",
+  "stem": "根据GB/T 24067-2024，产品系统定义的关键要素是具备（）。",
+  "opts": [
+   {
+    "k": "A",
+    "t": "明确的地理边界"
+   },
+   {
+    "k": "B",
+    "t": "一种或多种特定功能"
+   },
+   {
+    "k": "C",
+    "t": "可量化的排放数据"
+   },
+   {
+    "k": "D",
+    "t": "完整的生命周期阶段"
+   }
+  ],
+  "ans": "B"
+ },
+ {
+  "id": 171,
+  "type": "single",
+  "module": "产品碳足迹GB/T 24067",
+  "stem": "根据GB/T 24067-2024，设定系统边界时，（）。",
+  "opts": [
+   {
+    "k": "A",
+    "t": "依据取舍准则规定的阈值，允许排除对研究结论无显著影响的单元过程"
+   },
+   {
+    "k": "B",
+    "t": "依据数据质量要求规定的阈值，允许排除对研究结论无显著影响的单元过程"
+   },
+   {
+    "k": "C",
+    "t": "依据分配程序规定的阈值，允许排除对研究结论无显著影响的单元过程"
+   },
+   {
+    "k": "D",
+    "t": "依据时间边界规定的阈值，允许排除对研究结论无显著影响的单元过程"
+   }
+  ],
+  "ans": "A"
+ },
+ {
+  "id": 172,
+  "type": "single",
+  "module": "产品碳足迹GB/T 24067",
+  "stem": "关于初级数据的关键特征，说法正确的是（）。",
+  "opts": [
+   {
+    "k": "A",
+    "t": "替代过程获得的数据"
+   },
+   {
+    "k": "B",
+    "t": "通过直接测量或基于直接测量的计算"
+   },
+   {
+    "k": "C",
+    "t": "从产品系统内部获得"
+   },
+   {
+    "k": "D",
+    "t": "来自数据库或公开文献"
+   }
+  ],
+  "ans": "B"
+ },
+ {
+  "id": 173,
+  "type": "single",
+  "module": "产品碳足迹GB/T 24067",
+  "stem": "根据GB/T 24067-2024《温室气体 产品碳足迹量化要求和指南》规定的取舍准则，下列说法正确的是（）。",
+  "opts": [
+   {
+    "k": "A",
+    "t": "单个环节对产品碳足迹的影响小于5%时可被舍弃"
+   },
+   {
+    "k": "B",
+    "t": "单个环节对产品碳足迹的影响小于3%时可被舍弃"
+   },
+   {
+    "k": "C",
+    "t": "单个环节对产品碳足迹的影响小于1%时可被舍弃"
+   },
+   {
+    "k": "D",
+    "t": "单个环节对产品碳足迹的影响小于0.5%时可被舍弃"
+   }
+  ],
+  "ans": "C"
+ },
+ {
+  "id": 174,
+  "type": "single",
+  "module": "产品碳足迹GB/T 24067",
+  "stem": "在GB/T 24067-2024标准中，数据地理边界宜根据产品碳足迹研究目的选择地理格网划分规则和格网级别，并说明其合理性，其中，地理格网指的是（）。",
+  "opts": [
+   {
+    "k": "A",
+    "t": "全球统一边界"
+   },
+   {
+    "k": "B",
+    "t": "企业制造基地位置"
+   },
+   {
+    "k": "C",
+    "t": "按照行政区域等规则将地理空间划分所形成的网络"
+   },
+   {
+    "k": "D",
+    "t": "消费市场的范围"
+   }
+  ],
+  "ans": "C"
+ },
+ {
+  "id": 175,
+  "type": "single",
+  "module": "产品碳足迹GB/T 24067",
+  "stem": "在GB/T 24067-2024规定的分配程序中，产品碳足迹研究应包括确认与其他产品系统共享的单元过程，当单元过程为多个产品系统共享时，输入输出分配的第一个步骤是（ ）?",
+  "opts": [
+   {
+    "k": "A",
+    "t": "按物理属性分配"
+   },
+   {
+    "k": "B",
+    "t": "按经济价值分配"
+   },
+   {
+    "k": "C",
+    "t": "按后续使用次数分配"
+   },
+   {
+    "k": "D",
+    "t": "避免分配"
+   }
+  ],
+  "ans": "D"
+ },
+ {
+  "id": 176,
+  "type": "single",
+  "module": "产品碳足迹GB/T 24067",
+  "stem": "根据GB/T 24067-2024要求，下列关于调整系统边界的说法正确的是（）。",
+  "opts": [
+   {
+    "k": "A",
+    "t": "企业可依据地理边界来调整系统边界"
+   },
+   {
+    "k": "B",
+    "t": "企业可依据敏感性分析结果来调整系统边界"
+   },
+   {
+    "k": "C",
+    "t": "企业可依据时间边界来调整系统边界"
+   },
+   {
+    "k": "D",
+    "t": "企业可依据数据可获得性来调整系统边界"
+   }
+  ],
+  "ans": "B"
+ },
+ {
+  "id": 177,
+  "type": "single",
+  "module": "产品碳足迹GB/T 24067",
+  "stem": "根据GB/T 24067-2024要求，以下关于如何处理飞机运输 GHG 排放量的说法正确的是（ ）。",
+  "opts": [
+   {
+    "k": "A",
+    "t": "在报告中应包括且单独记录的项"
+   },
+   {
+    "k": "B",
+    "t": "在报告中宜包括的项"
+   },
+   {
+    "k": "C",
+    "t": "在报告中无需记录的项"
+   },
+   {
+    "k": "D",
+    "t": "在报告中可选记录的项"
+   }
+  ],
+  "ans": "A"
+ },
+ {
+  "id": 178,
+  "type": "single",
+  "module": "产品碳足迹GB/T 24067",
+  "stem": "在GB/T 24067-2024标准中，某产品已投入使用，则当产品的使用或生命末期阶段的GHG排放及清除的发生超过几年时，需要在LCI中标明其相较于生产年份的时间？（）",
+  "opts": [
+   {
+    "k": "A",
+    "t": "1"
+   },
+   {
+    "k": "B",
+    "t": "5"
+   },
+   {
+    "k": "C",
+    "t": "10"
+   },
+   {
+    "k": "D",
+    "t": "15"
+   }
+  ],
+  "ans": "C"
+ },
+ {
+  "id": 179,
+  "type": "single",
+  "module": "产品碳足迹GB/T 24067",
+  "stem": "根据GB/T 24067-2024，以下关于产品使用阶段的说法正确的是（）。",
+  "opts": [
+   {
+    "k": "A",
+    "t": "产品使用阶段的情景应选择产品理想使用条件"
+   },
+   {
+    "k": "B",
+    "t": "产品使用阶段的情景应选择产品设计说明"
+   },
+   {
+    "k": "C",
+    "t": "产品使用阶段的情景应选择单一场景下的使用情况"
+   },
+   {
+    "k": "D",
+    "t": "产品使用阶段的情景应选择代表选定市场的实际使用情况"
+   }
+  ],
+  "ans": "D"
+ },
+ {
+  "id": 180,
+  "type": "single",
+  "module": "产品碳足迹GB/T 24067",
+  "stem": "在GB/T 24067-2024标准中，以下（ ）属于闭环分配程序的应用场景。",
+  "opts": [
+   {
+    "k": "A",
+    "t": "回收材料用于同一产品系统的情况"
+   },
+   {
+    "k": "B",
+    "t": "开环产品系统"
+   },
+   {
+    "k": "C",
+    "t": "回收材料固有属性改变的情况"
+   },
+   {
+    "k": "D",
+    "t": "材料完全降级回收的情况"
+   }
+  ],
+  "ans": "A"
+ },
+ {
+  "id": 181,
+  "type": "single",
+  "module": "产品碳足迹GB/T 24067",
+  "stem": "GB/T 24067-2024对产品碳足迹绩效追踪的时间间隔要求为（ ）。",
+  "opts": [
+   {
+    "k": "A",
+    "t": "绩效追踪的时间间隔需等于数据时间边界"
+   },
+   {
+    "k": "B",
+    "t": "绩效追踪的时间间隔需不短于数据时间边界"
+   },
+   {
+    "k": "C",
+    "t": "绩效追踪的时间间隔需短于数据时间边界"
+   },
+   {
+    "k": "D",
+    "t": "对绩效追踪的时间间隔无要求"
+   }
+  ],
+  "ans": "B"
+ },
+ {
+  "id": 182,
+  "type": "single",
+  "module": "产品碳足迹GB/T 24067",
+  "stem": "以下哪项是GB/ 24067-2024中产品碳足迹鉴定性评审应遵循的标准？（）",
+  "opts": [
+   {
+    "k": "A",
+    "t": "GB/T 24001"
+   },
+   {
+    "k": "B",
+    "t": "GB/T 24044"
+   },
+   {
+    "k": "C",
+    "t": "ISO 14026"
+   },
+   {
+    "k": "D",
+    "t": "ISO/TS 14071"
+   }
+  ],
+  "ans": "D"
+ },
+ {
+  "id": 183,
+  "type": "single",
+  "module": "产品碳足迹GB/T 24067",
+  "stem": "以下哪项描述是GB/T 24067-2024标准所指的数据质量 “代表性” 评价？（ ）",
+  "opts": [
+   {
+    "k": "A",
+    "t": "数据来源的权威性"
+   },
+   {
+    "k": "B",
+    "t": "数据收集的时间长度"
+   },
+   {
+    "k": "C",
+    "t": "针对数据集真实性的定性评价"
+   },
+   {
+    "k": "D",
+    "t": "测量或测算的流所占的比例"
+   }
+  ],
+  "ans": "C"
+ },
+ {
+  "id": 184,
+  "type": "single",
+  "module": "产品碳足迹GB/T 24067",
+  "stem": "在GB/T 24067-2024中，功能单位的功能是为输入和输出数据提供（）。",
+  "opts": [
+   {
+    "k": "A",
+    "t": "累加权重基准"
+   },
+   {
+    "k": "B",
+    "t": "归一化基准"
+   },
+   {
+    "k": "C",
+    "t": "平均基准"
+   },
+   {
+    "k": "D",
+    "t": "以上均不是"
+   }
+  ],
+  "ans": "B"
+ },
+ {
+  "id": 185,
+  "type": "single",
+  "module": "产品碳足迹GB/T 24067",
+  "stem": "在GB/T 24067-2024中，产品碳足迹声明适用于（）的比较。",
+  "opts": [
+   {
+    "k": "A",
+    "t": "同一公司的产品"
+   },
+   {
+    "k": "B",
+    "t": "不同功能的产品"
+   },
+   {
+    "k": "C",
+    "t": "任何一种产品"
+   },
+   {
+    "k": "D",
+    "t": "具有相同功能的不同产品"
+   }
+  ],
+  "ans": "D"
+ },
+ {
+  "id": 186,
+  "type": "single",
+  "module": "产品碳足迹GB/T 24067",
+  "stem": "在GB/T 24067-2024中，方法论相关的局限不涵盖（）。",
+  "opts": [
+   {
+    "k": "A",
+    "t": "气候变化的长期性"
+   },
+   {
+    "k": "B",
+    "t": "数据地理限制"
+   },
+   {
+    "k": "C",
+    "t": "系统边界划分的影响"
+   },
+   {
+    "k": "D",
+    "t": "功能单位确定的影响"
+   }
+  ],
+  "ans": "A"
+ },
+ {
+  "id": 187,
+  "type": "single",
+  "module": "产品碳足迹GB/T 24067",
+  "stem": "下列选项中，（）不是产品使用阶段情景的 “市场场景” 选定依据。",
+  "opts": [
+   {
+    "k": "A",
+    "t": "企业内部销售目标情景"
+   },
+   {
+    "k": "B",
+    "t": "市场记录的使用情况"
+   },
+   {
+    "k": "C",
+    "t": "国际标准"
+   },
+   {
+    "k": "D",
+    "t": "产品类别规则"
+   }
+  ],
+  "ans": "A"
+ },
+ {
+  "id": 188,
+  "type": "single",
+  "module": "产品碳足迹GB/T 24067",
+  "stem": "某企业制造产品使用的电力为未对外销售的自发电力，依据GB/T 24067-2024的规定，该部分生命周期数据应当（）。",
+  "opts": [
+   {
+    "k": "A",
+    "t": "计算自发电过程的碳排放"
+   },
+   {
+    "k": "B",
+    "t": "单独记录"
+   },
+   {
+    "k": "C",
+    "t": "纳入产品碳足迹"
+   },
+   {
+    "k": "D",
+    "t": "按电网平均计算"
+   }
+  ],
+  "ans": "C"
+ },
+ {
+  "id": 189,
+  "type": "single",
+  "module": "产品碳足迹GB/T 24067",
+  "stem": "根据GB/T 24067-2024，季节性产品的温室气体排放量应包括（ ）。",
+  "opts": [
+   {
+    "k": "A",
+    "t": "至少涵盖完整12个月的数据"
+   },
+   {
+    "k": "B",
+    "t": "销售旺季的数据"
+   },
+   {
+    "k": "C",
+    "t": "生产旺季的数据"
+   },
+   {
+    "k": "D",
+    "t": "产品生命周期中特定时间段及系统内所有相关活动"
+   }
+  ],
+  "ans": "D"
+ },
+ {
+  "id": 190,
+  "type": "single",
+  "module": "产品碳足迹GB/T 24067",
+  "stem": "下列选项中，符合产品碳足迹计算使用的GWP值的是（ ）。",
+  "opts": [
+   {
+    "k": "A",
+    "t": "默认值"
+   },
+   {
+    "k": "B",
+    "t": "IPCC最新发布的GWP值"
+   },
+   {
+    "k": "C",
+    "t": "附录缺省值"
+   },
+   {
+    "k": "D",
+    "t": "无特殊规定"
+   }
+  ],
+  "ans": "B"
+ },
+ {
+  "id": 191,
+  "type": "single",
+  "module": "产品碳足迹GB/T 24067",
+  "stem": "以下计算方式正确的是（ ）。",
+  "opts": [
+   {
+    "k": "A",
+    "t": "产品碳足迹二氧化碳当量=温室气体温度×GWP"
+   },
+   {
+    "k": "B",
+    "t": "产品碳足迹二氧化碳当量=温室气体质量×GWP"
+   },
+   {
+    "k": "C",
+    "t": "产品碳足迹二氧化碳当量=温室气体浓度×GWP"
+   },
+   {
+    "k": "D",
+    "t": "产品碳足迹二氧化碳当量=温室气体体积×GWP"
+   }
+  ],
+  "ans": "B"
+ },
+ {
+  "id": 192,
+  "type": "single",
+  "module": "产品碳足迹GB/T 24067",
+  "stem": "产品种类规则（PCR）适用于创建（）。",
+  "opts": [
+   {
+    "k": "A",
+    "t": "IV型环境声明"
+   },
+   {
+    "k": "B",
+    "t": "III型环境声明"
+   },
+   {
+    "k": "C",
+    "t": "II型环境声明"
+   },
+   {
+    "k": "D",
+    "t": "I型环境声明"
+   }
+  ],
+  "ans": "B"
+ },
+ {
+  "id": 193,
+  "type": "single",
+  "module": "产品碳足迹GB/T 24067",
+  "stem": "根据GB/T 24067-2024的“避免重复计算” 原则，相同的温室气体排放量和清除量应当如何分配？（）",
+  "opts": [
+   {
+    "k": "A",
+    "t": "不分配"
+   },
+   {
+    "k": "B",
+    "t": "多次分配"
+   },
+   {
+    "k": "C",
+    "t": "仅需分配一次"
+   },
+   {
+    "k": "D",
+    "t": "按比例分配"
+   }
+  ],
+  "ans": "C"
+ },
+ {
+  "id": 194,
+  "type": "single",
+  "module": "产品碳足迹GB/T 24067",
+  "stem": "下列选项中，（）不属于产品碳足迹评价的研究目的应阐明的内容。",
+  "opts": [
+   {
+    "k": "A",
+    "t": "目标受众"
+   },
+   {
+    "k": "B",
+    "t": "开展该产品碳足迹研究的理由"
+   },
+   {
+    "k": "C",
+    "t": "面向产品消费者的披露情况"
+   },
+   {
+    "k": "D",
+    "t": "应用的意图"
+   }
+  ],
+  "ans": "C"
+ },
+ {
+  "id": 195,
+  "type": "single",
+  "module": "产品碳足迹GB/T 24067",
+  "stem": "以下关于产品碳足迹评价的相关描述中正确的是（）。",
+  "opts": [
+   {
+    "k": "A",
+    "t": "生命周期末期阶段的材料回收是可包含的内容"
+   },
+   {
+    "k": "B",
+    "t": "生命周期末期阶段的材料回收是在下个系统考虑的内容"
+   },
+   {
+    "k": "C",
+    "t": "生命周期末期阶段的材料回收属于必须包含的内容"
+   },
+   {
+    "k": "D",
+    "t": "生命周期末期阶段的材料回收属于无需包含的内容"
+   }
+  ],
+  "ans": "A"
+ },
+ {
+  "id": 196,
+  "type": "single",
+  "module": "产品碳足迹GB/T 24067",
+  "stem": "以下选项中，（）不属于GB/T 24067-2024中的电力合同工具（）。",
+  "opts": [
+   {
+    "k": "A",
+    "t": "电力交易合同"
+   },
+   {
+    "k": "B",
+    "t": "购电协议"
+   },
+   {
+    "k": "C",
+    "t": "企业用电台账"
+   },
+   {
+    "k": "D",
+    "t": "能源属性证书"
+   }
+  ],
+  "ans": "C"
+ },
+ {
+  "id": 197,
+  "type": "single",
+  "module": "产品碳足迹GB/T 24067",
+  "stem": "欧盟新电池法对进口欧盟市场的电池提出的要求不包括（）。",
+  "opts": [
+   {
+    "k": "A",
+    "t": "碳足迹"
+   },
+   {
+    "k": "B",
+    "t": "数字电池护照"
+   },
+   {
+    "k": "C",
+    "t": "电池的回收要求"
+   },
+   {
+    "k": "D",
+    "t": "生产企业组织级年度碳排放量"
+   }
+  ],
+  "ans": "D"
+ },
+ {
+  "id": 198,
+  "type": "single",
+  "module": "产品碳足迹GB/T 24067",
+  "stem": "欧盟CBAM的制定，名义上是为了解决（）。",
+  "opts": [
+   {
+    "k": "A",
+    "t": "碳价过高的问题"
+   },
+   {
+    "k": "B",
+    "t": "市场上的结构性供应过剩问题"
+   },
+   {
+    "k": "C",
+    "t": "碳配额分配不公平的问题"
+   },
+   {
+    "k": "D",
+    "t": "碳泄露的问题"
+   }
+  ],
+  "ans": "D"
+ },
+ {
+  "id": 199,
+  "type": "single",
+  "module": "产品碳足迹GB/T 24067",
+  "stem": "以下关于欧盟电池法碳足迹要求的说法不正确的是（）。",
+  "opts": [
+   {
+    "k": "A",
+    "t": "欧盟电池法要求进口到欧盟的电池进行全生命周期的碳足迹声明"
+   },
+   {
+    "k": "B",
+    "t": "电池的碳足迹依据ISO14067标准进行计算"
+   },
+   {
+    "k": "C",
+    "t": "在指定的时间后，超出欧盟碳足迹阈值的产品将不准进入欧盟市场"
+   },
+   {
+    "k": "D",
+    "t": "对于不同类型电池的碳足迹声明有不同的时间要求"
+   }
+  ],
+  "ans": "B"
+ },
+ {
+  "id": 200,
+  "type": "single",
+  "module": "双碳政策与国际法规",
+  "stem": "英国标准协会(BSI)制定的（）规定了产品碳足迹的要求及报告指南。（）",
+  "opts": [
+   {
+    "k": "A",
+    "t": "PAS 2050"
+   },
+   {
+    "k": "B",
+    "t": "PAS 2060"
+   },
+   {
+    "k": "C",
+    "t": "PAS 2070"
+   },
+   {
+    "k": "D",
+    "t": "PAS 2080"
+   }
+  ],
+  "ans": "A"
+ },
+ {
+  "id": 201,
+  "type": "single",
+  "module": "双碳政策与国际法规",
+  "stem": "根据ISO 14040，LCA的过程不包括以下哪个环节。（）",
+  "opts": [
+   {
+    "k": "A",
+    "t": "目标与范围定义"
+   },
+   {
+    "k": "B",
+    "t": "生命周期清单分析"
+   },
+   {
+    "k": "C",
+    "t": "生命周期影响评价"
+   },
+   {
+    "k": "D",
+    "t": "减排策略分析"
+   }
+  ],
+  "ans": "D"
+ },
+ {
+  "id": 202,
+  "type": "single",
+  "module": "企业温室气体核算指南",
+  "stem": "省级温室气体清单编制指南（试行）中的温室气体清单由（）的GHG排放组成。",
+  "opts": [
+   {
+    "k": "A",
+    "t": "能源活动、工业生产过程、林业和农业、废水处理"
+   },
+   {
+    "k": "B",
+    "t": "能源活动、工业生产过程、农业、土地利用变化和林业以及废弃物处理"
+   },
+   {
+    "k": "C",
+    "t": "能源活动、工业生产过程、林业和农业、土地利用变化以及固体废弃物处理"
+   },
+   {
+    "k": "D",
+    "t": "化石燃料燃烧活动、工业生产过程、稻田甲烷排放、森林转化温室气体排放以及固体废弃物处理"
+   }
+  ],
+  "ans": "B"
+ },
+ {
+  "id": 203,
+  "type": "single",
+  "module": "碳普惠",
+  "stem": "下列关于碳普惠的说法正确的是（）。",
+  "opts": [
+   {
+    "k": "A",
+    "t": "碳普惠是一种国际碳排放标准"
+   },
+   {
+    "k": "B",
+    "t": "碳普惠是一种只针对企业的碳排放交易系统"
+   },
+   {
+    "k": "C",
+    "t": "碳普惠是一种政府强制的减排措施"
+   },
+   {
+    "k": "D",
+    "t": "碳普惠是一种鼓励个人和企业减少碳排放的激励机制"
+   }
+  ],
+  "ans": "D"
+ },
+ {
+  "id": 204,
+  "type": "single",
+  "module": "碳普惠",
+  "stem": "碳普惠项目一般以什么方式鼓励公众参与？（）",
+  "opts": [
+   {
+    "k": "A",
+    "t": "严格限制能源使用"
+   },
+   {
+    "k": "B",
+    "t": "以提供积分或奖励的方式"
+   },
+   {
+    "k": "C",
+    "t": "以法律诉讼方式"
+   },
+   {
+    "k": "D",
+    "t": "以罚款的形式"
+   }
+  ],
+  "ans": "B"
+ },
+ {
+  "id": 205,
+  "type": "single",
+  "module": "碳普惠",
+  "stem": "碳普惠项目可能使用的激励措施不包括（）。",
+  "opts": [
+   {
+    "k": "A",
+    "t": "公开表扬"
+   },
+   {
+    "k": "B",
+    "t": "积分奖励"
+   },
+   {
+    "k": "C",
+    "t": "强制罚款"
+   },
+   {
+    "k": "D",
+    "t": "税收优惠"
+   }
+  ],
+  "ans": "C"
+ },
+ {
+  "id": 206,
+  "type": "single",
+  "module": "碳普惠",
+  "stem": "关于碳普惠项目的描述正确的是（）。",
+  "opts": [
+   {
+    "k": "A",
+    "t": "个人可以减少使用公共交通来减少自己的碳足迹"
+   },
+   {
+    "k": "B",
+    "t": "个人可以通过增加能源消耗来减少自己的碳足迹"
+   },
+   {
+    "k": "C",
+    "t": "个人可以通过增加私家车使用来减少自己的碳足迹"
+   },
+   {
+    "k": "D",
+    "t": "个人可以通过选择低碳生活方式来减少自己的碳足迹"
+   }
+  ],
+  "ans": "D"
+ },
+ {
+  "id": 207,
+  "type": "single",
+  "module": "碳普惠",
+  "stem": "下列选项中（）属于公司加入碳普惠项目的益处（）。",
+  "opts": [
+   {
+    "k": "A",
+    "t": "提高环境责任"
+   },
+   {
+    "k": "B",
+    "t": "获得政府补贴"
+   },
+   {
+    "k": "C",
+    "t": "降低产品质量"
+   },
+   {
+    "k": "D",
+    "t": "增加经费消耗"
+   }
+  ],
+  "ans": "A"
+ },
+ {
+  "id": 208,
+  "type": "single",
+  "module": "碳普惠",
+  "stem": "碳普惠项目对可持续发展的作用是（）。",
+  "opts": [
+   {
+    "k": "A",
+    "t": "对可持续发展无太大作用，只关注短期利益"
+   },
+   {
+    "k": "B",
+    "t": "偶尔对可持续发展起作用，主要取决于项目设计"
+   },
+   {
+    "k": "C",
+    "t": "鼓励低碳行为和环保意识"
+   },
+   {
+    "k": "D",
+    "t": "与可持续发展无关"
+   }
+  ],
+  "ans": "C"
+ },
+ {
+  "id": 209,
+  "type": "single",
+  "module": "碳普惠",
+  "stem": "碳普惠项目的潜在参与者是（）。",
+  "opts": [
+   {
+    "k": "A",
+    "t": "仅个人"
+   },
+   {
+    "k": "B",
+    "t": "政府机构、企业和个人"
+   },
+   {
+    "k": "C",
+    "t": "仅政府机构"
+   },
+   {
+    "k": "D",
+    "t": "仅企业"
+   }
+  ],
+  "ans": "B"
+ },
+ {
+  "id": 210,
+  "type": "single",
+  "module": "碳普惠",
+  "stem": "（）是碳普惠政策中的典型做法。",
+  "opts": [
+   {
+    "k": "A",
+    "t": "限制企业使用可再生能源"
+   },
+   {
+    "k": "B",
+    "t": "增加化石燃料的开采和使用"
+   },
+   {
+    "k": "C",
+    "t": "为居民提供公共交通补贴，以减少碳排放"
+   },
+   {
+    "k": "D",
+    "t": "鼓励居民使用私家车出行"
+   }
+  ],
+  "ans": "C"
+ },
+ {
+  "id": 211,
+  "type": "multi",
+  "module": "碳汇与CCER方法学",
+  "stem": "国家为保护生态环境，重点加强对（ ）、（ ）以及（ ）的保护，并建立健全相关制度。",
+  "opts": [
+   {
+    "k": "A",
+    "t": "森林"
+   },
+   {
+    "k": "B",
+    "t": "土壤"
+   },
+   {
+    "k": "C",
+    "t": "水"
+   },
+   {
+    "k": "D",
+    "t": "大气"
+   },
+   {
+    "k": "E",
+    "t": "海洋"
+   }
+  ],
+  "ans": "BCD"
+ },
+ {
+  "id": 212,
+  "type": "multi",
+  "module": "碳汇与CCER方法学",
+  "stem": "最初发布的四项CCER方法学，其设计旨在适用于（ ）等类型的自愿减排项目。",
+  "opts": [
+   {
+    "k": "A",
+    "t": "符合要求的红树林营造项目"
+   },
+   {
+    "k": "B",
+    "t": "并网型风力发电项目"
+   },
+   {
+    "k": "C",
+    "t": "所有工业生产中的节能改造项目"
+   },
+   {
+    "k": "D",
+    "t": "特定条件下的造林和再造林项目"
+   },
+   {
+    "k": "E",
+    "t": "并网型光伏发电项目"
+   }
+  ],
+  "ans": "ABDE"
+ },
+ {
+  "id": 213,
+  "type": "multi",
+  "module": "碳汇与CCER方法学",
+  "stem": "采用红树林方法学进行碳核算时，活动边界内需要被精确量化的碳源活动有（ ）。",
+  "opts": [
+   {
+    "k": "A",
+    "t": "红树林生长过程中因人类活动（如少量农药使用）产生的碳排放"
+   },
+   {
+    "k": "B",
+    "t": "项目区外远处工业排放对红树林的潜在影响"
+   },
+   {
+    "k": "C",
+    "t": "红树林凋落物分解过程中的碳排放"
+   },
+   {
+    "k": "D",
+    "t": "红树林土壤中有机碳分解产生的碳排放"
+   },
+   {
+    "k": "E",
+    "t": "红树林生态系统内生物呼吸作用产生的碳排放"
+   }
+  ],
+  "ans": "ACDE"
+ },
+ {
+  "id": 214,
+  "type": "multi",
+  "module": "碳汇与CCER方法学",
+  "stem": "在红树林方法学的空间边界内，与碳核算直接相关的生态过程包括（ ）。",
+  "opts": [
+   {
+    "k": "A",
+    "t": "红树林生态系统内各营养级生物的呼吸作用产生二氧化碳"
+   },
+   {
+    "k": "B",
+    "t": "红树林与周边生态系统间通过潮水和生物的碳交换"
+   },
+   {
+    "k": "C",
+    "t": "红树林根系与土壤微生物的相互作用影响碳固定"
+   },
+   {
+    "k": "D",
+    "t": "红树林凋落物在生态系统内的分解与再循环"
+   },
+   {
+    "k": "E",
+    "t": "红树林的光合作用吸收二氧化碳"
+   }
+  ],
+  "ans": "ABCDE"
+ },
+ {
+  "id": 215,
+  "type": "multi",
+  "module": "碳汇与CCER方法学",
+  "stem": "以下（ ）活动纳入造林碳汇方法学项目的核算边界，其产生的碳排放需精准核算并从项目固碳量中予以扣除",
+  "opts": [
+   {
+    "k": "A",
+    "t": "造林地的苗木培育移栽与初期抚育管理"
+   },
+   {
+    "k": "B",
+    "t": "造林地周边居民区的能源消耗排放"
+   },
+   {
+    "k": "C",
+    "t": "造林地内因项目实施引发的、与植被养护相关的人为活动碳排放"
+   },
+   {
+    "k": "D",
+    "t": "造林地附近工业园区的生产废气排放"
+   },
+   {
+    "k": "E",
+    "t": "造林地内的管护设施搭建与日常维护作业"
+   }
+  ],
+  "ans": "ACE"
+ },
+ {
+  "id": 216,
+  "type": "multi",
+  "module": "碳汇与CCER方法学",
+  "stem": "采用造林碳汇方法学时，核算边界内需要进行精确碳排放计算的活动包括（ ）。",
+  "opts": [
+   {
+    "k": "A",
+    "t": "造林地内树木的种植与养护"
+   },
+   {
+    "k": "B",
+    "t": "造林地与周边生态系统间的物质和能量交换"
+   },
+   {
+    "k": "C",
+    "t": "造林区外旅游项目的排放"
+   },
+   {
+    "k": "D",
+    "t": "造林地内的设施建设与运行"
+   },
+   {
+    "k": "E",
+    "t": "造林地周边非关联道路的建设排放"
+   }
+  ],
+  "ans": "ABD"
+ },
+ {
+  "id": 217,
+  "type": "multi",
+  "module": "碳汇与CCER方法学",
+  "stem": "制定产品层级核算方案时，若要考虑碳汇因素，则可能需要涉及（ ）等方面。",
+  "opts": [
+   {
+    "k": "A",
+    "t": "产品使用过程中用户自行开展的碳汇活动"
+   },
+   {
+    "k": "B",
+    "t": "企业投资的海外碳汇项目与产品的牵强关联"
+   },
+   {
+    "k": "C",
+    "t": "产品生产厂区内的绿化植被碳汇"
+   },
+   {
+    "k": "D",
+    "t": "原材料种植或开采区域的生态碳汇"
+   },
+   {
+    "k": "E",
+    "t": "产品回收处理后用于造林等碳汇项目的关联"
+   }
+  ],
+  "ans": "CDE"
+ },
+ {
+  "id": 218,
+  "type": "multi",
+  "module": "碳汇与CCER方法学",
+  "stem": "在计算“森林及其他木质生物质碳储量变化”这一指标时，其核算范围应包含（ ）。",
+  "opts": [
+   {
+    "k": "A",
+    "t": "疏林生长生物量碳吸收"
+   },
+   {
+    "k": "B",
+    "t": "灌木林生物量碳贮量变化"
+   },
+   {
+    "k": "C",
+    "t": "活立木消耗碳排放"
+   },
+   {
+    "k": "D",
+    "t": "乔木林生长生物量碳吸收"
+   },
+   {
+    "k": "E",
+    "t": "竹林生物量碳贮量变化"
+   }
+  ],
+  "ans": "ABCDE"
+ },
+ {
+  "id": 219,
+  "type": "multi",
+  "module": "碳汇与CCER方法学",
+  "stem": "在土地利用变化与林业清单的报告中，核心报告内容是关于（ ）温室气体的排放与吸收情况。",
+  "opts": [
+   {
+    "k": "A",
+    "t": "氢氟碳化物"
+   },
+   {
+    "k": "B",
+    "t": "二氧化碳"
+   },
+   {
+    "k": "C",
+    "t": "氧化亚氮"
+   },
+   {
+    "k": "D",
+    "t": "甲烷"
+   },
+   {
+    "k": "E",
+    "t": "硫氧化物"
+   }
+  ],
+  "ans": "BCD"
+ },
+ {
+  "id": 220,
+  "type": "multi",
+  "module": "碳汇与CCER方法学",
+  "stem": "依据红树林营造的CCER方法学，在设定项目情景时，应纳入考量的温室气体排放源是（ ）。",
+  "opts": [
+   {
+    "k": "A",
+    "t": "土壤微生物代谢产生的CH4"
+   },
+   {
+    "k": "B",
+    "t": "游客呼吸产生的CO2"
+   },
+   {
+    "k": "C",
+    "t": "船舶运输产生的CO2排放"
+   },
+   {
+    "k": "D",
+    "t": "土壤微生物代谢产生的N2O"
+   },
+   {
+    "k": "E",
+    "t": "项目施工机械的燃料消耗"
+   }
+  ],
+  "ans": "AD"
+ },
+ {
+  "id": 221,
+  "type": "multi",
+  "module": "全国碳市场与碳交易",
+  "stem": "碳交易对企业的积极影响可能包括（）。",
+  "opts": [
+   {
+    "k": "A",
+    "t": "促进企业进行技术创新"
+   },
+   {
+    "k": "B",
+    "t": "促进企业采用清洁能源"
+   },
+   {
+    "k": "C",
+    "t": "直接提高产品的市场竞争力"
+   },
+   {
+    "k": "D",
+    "t": "增加企业的财务风险"
+   }
+  ],
+  "ans": "AB"
+ },
+ {
+  "id": 222,
+  "type": "multi",
+  "module": "全国碳市场与碳交易",
+  "stem": "全球各地碳交易市场的碳信用可以来自于（）。",
+  "opts": [
+   {
+    "k": "A",
+    "t": "可再生能源项目"
+   },
+   {
+    "k": "B",
+    "t": "能源效率提升项目"
+   },
+   {
+    "k": "C",
+    "t": "森林保护项目"
+   },
+   {
+    "k": "D",
+    "t": "碳捕集与储存项目"
+   }
+  ],
+  "ans": "ABCD"
+ },
+ {
+  "id": 223,
+  "type": "multi",
+  "module": "全国碳市场与碳交易",
+  "stem": "碳排放交易制度通常包括以下（）关键要素。",
+  "opts": [
+   {
+    "k": "A",
+    "t": "排放限额设定"
+   },
+   {
+    "k": "B",
+    "t": "产品能效评级"
+   },
+   {
+    "k": "C",
+    "t": "碳排放交易市场"
+   },
+   {
+    "k": "D",
+    "t": "价格设定机制"
+   }
+  ],
+  "ans": "ACD"
+ },
+ {
+  "id": 224,
+  "type": "multi",
+  "module": "产品碳足迹GB/T 24067",
+  "stem": "对过程生命周期评价（PLCA）描述正确的有哪些？（）",
+  "opts": [
+   {
+    "k": "A",
+    "t": "针对性评估微观层面的产品或服务"
+   },
+   {
+    "k": "B",
+    "t": "侧重于宏观层面的整体环境影响评估"
+   },
+   {
+    "k": "C",
+    "t": "包括目标定义和范围界定"
+   },
+   {
+    "k": "D",
+    "t": "包括清单分析"
+   }
+  ],
+  "ans": "ACD"
+ },
+ {
+  "id": 225,
+  "type": "multi",
+  "module": "产品碳足迹GB/T 24067",
+  "stem": "在建筑LCA的运输模块中，需要考虑哪些关键因素？（）",
+  "opts": [
+   {
+    "k": "A",
+    "t": "运输距离"
+   },
+   {
+    "k": "B",
+    "t": "材料类型"
+   },
+   {
+    "k": "C",
+    "t": "运输工具类型"
+   },
+   {
+    "k": "D",
+    "t": "非耗能施工设备的使用"
+   }
+  ],
+  "ans": "ABC"
+ },
+ {
+  "id": 226,
+  "type": "multi",
+  "module": "产品碳足迹GB/T 24067",
+  "stem": "产品碳标签通常包括（）等要素，以提供关于产品碳足迹的详细信息。",
+  "opts": [
+   {
+    "k": "A",
+    "t": "总碳排放量"
+   },
+   {
+    "k": "B",
+    "t": "计算方法和标准"
+   },
+   {
+    "k": "C",
+    "t": "完整的产品供应链信息"
+   },
+   {
+    "k": "D",
+    "t": "数据来源和透明度"
+   }
+  ],
+  "ans": "ABD"
+ },
+ {
+  "id": 227,
+  "type": "multi",
+  "module": "产品碳足迹GB/T 24067",
+  "stem": "欧盟新电池法案的内容包括（）。",
+  "opts": [
+   {
+    "k": "A",
+    "t": "可持续设计要求"
+   },
+   {
+    "k": "B",
+    "t": "碳足迹和环境影响"
+   },
+   {
+    "k": "C",
+    "t": "资源循环"
+   },
+   {
+    "k": "D",
+    "t": "电池回收和处理"
+   }
+  ],
+  "ans": "ABCD"
+ },
+ {
+  "id": 228,
+  "type": "multi",
+  "module": "双碳政策与国际法规",
+  "stem": "《G20转型金融框架》的5个支柱分别是界定标准、（ ）、金融工具、激励机制和（）。",
+  "opts": [
+   {
+    "k": "A",
+    "t": "无风险投资"
+   },
+   {
+    "k": "B",
+    "t": "公正转型"
+   },
+   {
+    "k": "C",
+    "t": "披露要求"
+   },
+   {
+    "k": "D",
+    "t": "政府监管"
+   }
+  ],
+  "ans": "BC"
+ },
+ {
+  "id": 229,
+  "type": "multi",
+  "module": "其他",
+  "stem": "以下关于林业碳汇的说法正确的是（）。",
+  "opts": [
+   {
+    "k": "A",
+    "t": "林业碳汇指的是通过实施造林再造林和森林管理，减少毁林等活动，吸收大气中的二氧化碳"
+   },
+   {
+    "k": "B",
+    "t": "所有的林地都可申请开发成林业碳汇"
+   },
+   {
+    "k": "C",
+    "t": "影响森林固碳效应的因素众多，固碳量与森林的年龄组成密切相关"
+   },
+   {
+    "k": "D",
+    "t": "森林的固碳量受到海拔、地形、生态系统等多方面影响"
+   }
+  ],
+  "ans": "ACD"
+ },
+ {
+  "id": 230,
+  "type": "multi",
+  "module": "其他",
+  "stem": "《碳排放管理员国家职业标准》中，下列哪些工种有1、2、3、4级四个等级？（  ）",
+  "opts": [
+   {
+    "k": "A",
+    "t": "碳排放核算员"
+   },
+   {
+    "k": "B",
+    "t": "碳排放核查员"
+   },
+   {
+    "k": "C",
+    "t": "碳排放咨询员"
+   },
+   {
+    "k": "D",
+    "t": "碳排放交易员"
+   }
+  ],
+  "ans": "ABD"
+ },
+ {
+  "id": 231,
+  "type": "multi",
+  "module": "全国碳市场与碳交易",
+  "stem": "以下关于配额说法正确的是（）。",
+  "opts": [
+   {
+    "k": "A",
+    "t": "如果配额总量低于没有碳排放权政策中的照常排放，将导致碳市场配额价格低迷"
+   },
+   {
+    "k": "B",
+    "t": "碳排放配额分配是碳排放权交易制度设计中与企业关系最为密切的一环"
+   },
+   {
+    "k": "C",
+    "t": "配额总量的多寡将决定配额的供给，从而影响配额价格"
+   },
+   {
+    "k": "D",
+    "t": "配额的分配方式主要有免费分配与拍卖"
+   }
+  ],
+  "ans": "BCD"
+ },
+ {
+  "id": 232,
+  "type": "multi",
+  "module": "全国碳市场与碳交易",
+  "stem": "在大部分碳交易市场的MRV体系中，核查结论应至少包括（）等内容。",
+  "opts": [
+   {
+    "k": "A",
+    "t": "企业排放报告的符合性"
+   },
+   {
+    "k": "B",
+    "t": "企业温室气体排放总量的声明"
+   },
+   {
+    "k": "C",
+    "t": "排放量异常波动的原因说明"
+   },
+   {
+    "k": "D",
+    "t": "核查过程中使用的软件工具"
+   }
+  ],
+  "ans": "ABC"
+ },
+ {
+  "id": 233,
+  "type": "multi",
+  "module": "全国碳市场与碳交易",
+  "stem": "MRV制度的实施有助于解决碳市场中的（）关键问题。",
+  "opts": [
+   {
+    "k": "A",
+    "t": "透明度"
+   },
+   {
+    "k": "B",
+    "t": "可靠性"
+   },
+   {
+    "k": "C",
+    "t": "配额不足"
+   },
+   {
+    "k": "D",
+    "t": "合规性"
+   }
+  ],
+  "ans": "ABD"
+ },
+ {
+  "id": 234,
+  "type": "multi",
+  "module": "全国碳市场与碳交易",
+  "stem": "在进行碳排放书面调研对接内容时，哪些方面是必须考虑的？（）",
+  "opts": [
+   {
+    "k": "A",
+    "t": "碳排放的量化数据"
+   },
+   {
+    "k": "B",
+    "t": "减排目标和计划"
+   },
+   {
+    "k": "C",
+    "t": "监管和合规性"
+   },
+   {
+    "k": "D",
+    "t": "碳排放管理能力建设"
+   }
+  ],
+  "ans": "ABC"
+ },
+ {
+  "id": 235,
+  "type": "multi",
+  "module": "其他",
+  "stem": "在组织GHG排放量化中，下列哪些排放属于范围一？（）",
+  "opts": [
+   {
+    "k": "A",
+    "t": "公司用电产生的二氧化碳排放"
+   },
+   {
+    "k": "B",
+    "t": "组织的天然气锅炉产生的GHG排放"
+   },
+   {
+    "k": "C",
+    "t": "组织的商务汽车产生的GHG排放"
+   },
+   {
+    "k": "D",
+    "t": "公司购买的热力产生的二氧化碳排放"
+   }
+  ],
+  "ans": "BC"
+ },
+ {
+  "id": 236,
+  "type": "multi",
+  "module": "企业温室气体核算指南",
+  "stem": "依据发电行业的温室气体排放核算与报告指南，重点排放单位执行数据质量控制计划时需符合的要求包括（）。",
+  "opts": [
+   {
+    "k": "A",
+    "t": "核算边界与计划中的核算边界和主要排放设施一致"
+   },
+   {
+    "k": "B",
+    "t": "所有活动数据、排放因子和生产数据能够按照计划实施测量"
+   },
+   {
+    "k": "C",
+    "t": "煤炭的采样、制样、检测化验能够按照计划实施"
+   },
+   {
+    "k": "D",
+    "t": "发电设施基本情况与计划描述一致"
+   }
+  ],
+  "ans": "ABCD"
+ },
+ {
+  "id": 237,
+  "type": "multi",
+  "module": "企业温室气体核算指南",
+  "stem": "根据《企业温室气体排放核算与报告指南 铝冶炼行业》，铝冶炼行业的企业层级温室气体排放核算和报告范围包括（）。",
+  "opts": [
+   {
+    "k": "A",
+    "t": "企业铝冶炼购买原料的开采产生的排放"
+   },
+   {
+    "k": "B",
+    "t": "铝冶炼设施产生的排放"
+   },
+   {
+    "k": "C",
+    "t": "发电设施产生的排放"
+   },
+   {
+    "k": "D",
+    "t": "其他非铝冶炼产品生产设施产生的排放"
+   }
+  ],
+  "ans": "BCD"
+ },
+ {
+  "id": 238,
+  "type": "multi",
+  "module": "全国碳市场与碳交易",
+  "stem": "下列哪些行业被列为国家重点管控的高碳排放行业？（）",
+  "opts": [
+   {
+    "k": "A",
+    "t": "钢铁行业"
+   },
+   {
+    "k": "B",
+    "t": "食品加工"
+   },
+   {
+    "k": "C",
+    "t": "电力行业"
+   },
+   {
+    "k": "D",
+    "t": "化工行业"
+   }
+  ],
+  "ans": "ACD"
+ },
+ {
+  "id": 239,
+  "type": "multi",
+  "module": "全国碳市场与碳交易",
+  "stem": "工业企业温室气体排放核算应遵守的基本准则包括（）。",
+  "opts": [
+   {
+    "k": "A",
+    "t": "完整性"
+   },
+   {
+    "k": "B",
+    "t": "一致性"
+   },
+   {
+    "k": "C",
+    "t": "准确性"
+   },
+   {
+    "k": "D",
+    "t": "相关性"
+   }
+  ],
+  "ans": "ABCD"
+ },
+ {
+  "id": 240,
+  "type": "multi",
+  "module": "温室气体基础",
+  "stem": "以下哪些气体对温室效应有主要贡献？（）",
+  "opts": [
+   {
+    "k": "A",
+    "t": "氟利昂"
+   },
+   {
+    "k": "B",
+    "t": "氧化亚氮"
+   },
+   {
+    "k": "C",
+    "t": "甲烷"
+   },
+   {
+    "k": "D",
+    "t": "三氟化氮"
+   }
+  ],
+  "ans": "ABCD"
+ },
+ {
+  "id": 241,
+  "type": "judge",
+  "module": "碳汇与CCER方法学",
+  "stem": "气候变化（如升温、干旱、火灾）会严重影响森林生态系统的健康，可能导致其碳汇功能减弱，甚至使其从“碳汇”转变为“碳源”。",
+  "opts": [
+   {
+    "k": "A",
+    "t": "正确"
+   },
+   {
+    "k": "B",
+    "t": "错误"
+   }
+  ],
+  "ans": "A"
+ },
+ {
+  "id": 242,
+  "type": "judge",
+  "module": "碳汇与CCER方法学",
+  "stem": "造林碳汇核算的是碳储量变化量。树木的自然死亡和分解会释放碳，这是碳库（生物量、死有机质）动态变化的一部分，但不包含在碳储量的计算模型中。",
+  "opts": [
+   {
+    "k": "A",
+    "t": "正确"
+   },
+   {
+    "k": "B",
+    "t": "错误"
+   }
+  ],
+  "ans": "B"
+ },
+ {
+  "id": 243,
+  "type": "judge",
+  "module": "碳汇与CCER方法学",
+  "stem": "对于造林碳汇项目，其地块内因修建道路而产生的排放，同样需要被纳入碳核算的范围。",
+  "opts": [
+   {
+    "k": "A",
+    "t": "正确"
+   },
+   {
+    "k": "B",
+    "t": "错误"
+   }
+  ],
+  "ans": "A"
+ },
+ {
+  "id": 244,
+  "type": "judge",
+  "module": "碳汇与CCER方法学",
+  "stem": "森林采伐的生物量损失超过森林生长的生物量增加时，LUCF表现为净的碳排放源，也有可能是碳汇。",
+  "opts": [
+   {
+    "k": "A",
+    "t": "正确"
+   },
+   {
+    "k": "B",
+    "t": "错误"
+   }
+  ],
+  "ans": "B"
+ },
+ {
+  "id": 245,
+  "type": "judge",
+  "module": "碳汇与CCER方法学",
+  "stem": "森林被转化时，其损失的生物质碳会通过两种途径释放到大气：一是通过现场或非现场燃烧，二是通过长时间的分解作用。",
+  "opts": [
+   {
+    "k": "A",
+    "t": "正确"
+   },
+   {
+    "k": "B",
+    "t": "错误"
+   }
+  ],
+  "ans": "A"
+ },
+ {
+  "id": 246,
+  "type": "judge",
+  "module": "碳汇与CCER方法学",
+  "stem": "根据红树林营造项目的相关方法学，在项目情景下，地上的生物质被视为一个主要的碳储存库。",
+  "opts": [
+   {
+    "k": "A",
+    "t": "正确"
+   },
+   {
+    "k": "B",
+    "t": "错误"
+   }
+  ],
+  "ans": "A"
+ },
+ {
+  "id": 247,
+  "type": "judge",
+  "module": "碳汇与CCER方法学",
+  "stem": "在运用造林碳汇方法学预估项目清除量时，所需的不同树种森林面积数据，应以项目设计文件及经审定确认的数据为准。",
+  "opts": [
+   {
+    "k": "A",
+    "t": "正确"
+   },
+   {
+    "k": "B",
+    "t": "错误"
+   }
+  ],
+  "ans": "A"
+ },
+ {
+  "id": 248,
+  "type": "judge",
+  "module": "碳汇与CCER方法学",
+  "stem": "依据造林碳汇方法学，当计算因火灾导致的温室气体排放时，燃烧面积的数据必须通过实地野外测量来确定。",
+  "opts": [
+   {
+    "k": "A",
+    "t": "正确"
+   },
+   {
+    "k": "B",
+    "t": "错误"
+   }
+  ],
+  "ans": "A"
+ },
+ {
+  "id": 249,
+  "type": "judge",
+  "module": "碳汇与CCER方法学",
+  "stem": "当前的“省级LUCF清单”计划纳入由人类活动引发的两类二氧化碳吸收或排放：一是森林及其他木质生物质的碳储量变化，二是森林转化导致的碳排放。",
+  "opts": [
+   {
+    "k": "A",
+    "t": "正确"
+   },
+   {
+    "k": "B",
+    "t": "错误"
+   }
+  ],
+  "ans": "A"
+ },
+ {
+  "id": 250,
+  "type": "judge",
+  "module": "碳汇与CCER方法学",
+  "stem": "依据红树林方法学，计算不确定性的步骤是：先算各碳层的平均单位面积生物质碳储量方差，再算项目总体的平均单位面积生物质碳储量方差，最后算出项目总体的平均单位面积生物质碳储量不确定性。",
+  "opts": [
+   {
+    "k": "A",
+    "t": "正确"
+   },
+   {
+    "k": "B",
+    "t": "错误"
+   }
+  ],
+  "ans": "A"
+ },
+ {
+  "id": 251,
+  "type": "judge",
+  "module": "能源基础与双碳常识",
+  "stem": "碳排放核算是评估一个组织或活动所产生的碳排放量的过程。 （）",
+  "opts": [
+   {
+    "k": "A",
+    "t": "正确"
+   },
+   {
+    "k": "B",
+    "t": "错误"
+   }
+  ],
+  "ans": "A"
+ },
+ {
+  "id": 252,
+  "type": "judge",
+  "module": "能源基础与双碳常识",
+  "stem": "企业自行组织碳排放盘查可以帮助企业发现节能减排的潜力和优化管理方案。（）",
+  "opts": [
+   {
+    "k": "A",
+    "t": "正确"
+   },
+   {
+    "k": "B",
+    "t": "错误"
+   }
+  ],
+  "ans": "A"
+ },
+ {
+  "id": 253,
+  "type": "judge",
+  "module": "能源基础与双碳常识",
+  "stem": "生物质能是一种在所有阶段都不产生温室气体的能源，所以被称作“零碳”能源。（）",
+  "opts": [
+   {
+    "k": "A",
+    "t": "正确"
+   },
+   {
+    "k": "B",
+    "t": "错误"
+   }
+  ],
+  "ans": "B"
+ },
+ {
+  "id": 254,
+  "type": "judge",
+  "module": "能源基础与双碳常识",
+  "stem": "节能减排的原则要求企业在能源采购时优先考虑清洁能源。（）",
+  "opts": [
+   {
+    "k": "A",
+    "t": "正确"
+   },
+   {
+    "k": "B",
+    "t": "错误"
+   }
+  ],
+  "ans": "A"
+ },
+ {
+  "id": 255,
+  "type": "judge",
+  "module": "能源基础与双碳常识",
+  "stem": "一次能源是指企业自身生产的能源，二次能源是指企业外购的能源。（）",
+  "opts": [
+   {
+    "k": "A",
+    "t": "正确"
+   },
+   {
+    "k": "B",
+    "t": "错误"
+   }
+  ],
+  "ans": "B"
+ },
+ {
+  "id": 256,
+  "type": "judge",
+  "module": "能源基础与双碳常识",
+  "stem": "为了保证一致性，碳排放核算方法一旦确定，就不能再改变。（）",
+  "opts": [
+   {
+    "k": "A",
+    "t": "正确"
+   },
+   {
+    "k": "B",
+    "t": "错误"
+   }
+  ],
+  "ans": "B"
+ },
+ {
+  "id": 257,
+  "type": "judge",
+  "module": "产品碳足迹GB/T 24067",
+  "stem": "产品碳足迹计算的一个重要目的是帮助消费者了解产品的环境友好程度。（）",
+  "opts": [
+   {
+    "k": "A",
+    "t": "正确"
+   },
+   {
+    "k": "B",
+    "t": "错误"
+   }
+  ],
+  "ans": "A"
+ },
+ {
+  "id": 258,
+  "type": "judge",
+  "module": "产品碳足迹GB/T 24067",
+  "stem": "目前，碳标签在全球范围内有统一的标准和认证机构来管理。（）",
+  "opts": [
+   {
+    "k": "A",
+    "t": "正确"
+   },
+   {
+    "k": "B",
+    "t": "错误"
+   }
+  ],
+  "ans": "B"
+ },
+ {
+  "id": 259,
+  "type": "judge",
+  "module": "产品碳足迹GB/T 24067",
+  "stem": "英国标准机构编制的《PAS2050:2011 产品与服务生命周期温室气体排放的评价规范》只适用于欧洲产品碳足迹核算，并不适用于世界其他地方的产品。（）",
+  "opts": [
+   {
+    "k": "A",
+    "t": "正确"
+   },
+   {
+    "k": "B",
+    "t": "错误"
+   }
+  ],
+  "ans": "B"
+ },
+ {
+  "id": 260,
+  "type": "judge",
+  "module": "能源基础与双碳常识",
+  "stem": "树木只会吸收二氧化碳，不会释放二氧化碳。（）",
+  "opts": [
+   {
+    "k": "A",
+    "t": "正确"
+   },
+   {
+    "k": "B",
+    "t": "错误"
+   }
+  ],
+  "ans": "B"
+ },
+ {
+  "id": 261,
+  "type": "judge",
+  "module": "能源基础与双碳常识",
+  "stem": "通过碳捕集与储存技术（CCS），可以将所有工业排放的二氧化碳永久储存在地下，从而实现碳中和。（）",
+  "opts": [
+   {
+    "k": "A",
+    "t": "正确"
+   },
+   {
+    "k": "B",
+    "t": "错误"
+   }
+  ],
+  "ans": "B"
+ },
+ {
+  "id": 262,
+  "type": "judge",
+  "module": "双碳政策与国际法规",
+  "stem": "《联合国气候变化框架公约》是第一个以条约形式要求承担保护气候系统义务的框架性文件。（）",
+  "opts": [
+   {
+    "k": "A",
+    "t": "正确"
+   },
+   {
+    "k": "B",
+    "t": "错误"
+   }
+  ],
+  "ans": "A"
+ },
+ {
+  "id": 263,
+  "type": "judge",
+  "module": "碳普惠",
+  "stem": "根据《山东省碳普惠试点工作指导意见》，碳普惠机制主要针对绿色低碳生活、资源循环利用、可再生能源开发等领域的降碳增汇行为。（）",
+  "opts": [
+   {
+    "k": "A",
+    "t": "正确"
+   },
+   {
+    "k": "B",
+    "t": "错误"
+   }
+  ],
+  "ans": "A"
+ },
+ {
+  "id": 264,
+  "type": "judge",
+  "module": "碳普惠",
+  "stem": "山东省碳普惠“减排项目”产生的核证减排量最小时间单位为正季度。（）",
+  "opts": [
+   {
+    "k": "A",
+    "t": "正确"
+   },
+   {
+    "k": "B",
+    "t": "错误"
+   }
+  ],
+  "ans": "B"
+ },
+ {
+  "id": 265,
+  "type": "judge",
+  "module": "温室气体基础",
+  "stem": "《京都议定书》及其修正案中规定控制的7种温室气体包括：二氧化碳（CO2）、甲烷（CH4）、氧化亚氮（N2O）、氢氟碳化物（HFCs）、全氟化碳（PFCs）、六氟化硫（SF6）和三氟化氮（NF3）。（）",
+  "opts": [
+   {
+    "k": "A",
+    "t": "正确"
+   },
+   {
+    "k": "B",
+    "t": "错误"
+   }
+  ],
+  "ans": "A"
+ },
+ {
+  "id": 266,
+  "type": "judge",
+  "module": "企业温室气体核算指南",
+  "stem": "水泥制造企业可随意指派人员兼职负责温室气体排放核算与报告，无需固定专人。（）",
+  "opts": [
+   {
+    "k": "A",
+    "t": "正确"
+   },
+   {
+    "k": "B",
+    "t": "错误"
+   }
+  ],
+  "ans": "B"
+ },
+ {
+  "id": 267,
+  "type": "judge",
+  "module": "企业温室气体核算指南",
+  "stem": "铝电解工序层级温室气体排放核算工作仅需包括燃料燃烧排放计算和购入电力排放核算两个部分。（）",
+  "opts": [
+   {
+    "k": "A",
+    "t": "正确"
+   },
+   {
+    "k": "B",
+    "t": "错误"
+   }
+  ],
+  "ans": "B"
+ },
+ {
+  "id": 268,
+  "type": "judge",
+  "module": "企业温室气体核算指南",
+  "stem": "《企业温室气体排放核算方法与报告指南 水泥行业》不适用于使用非碳酸盐替代原料的水泥生产线温室气体排放核算。（）",
+  "opts": [
+   {
+    "k": "A",
+    "t": "正确"
+   },
+   {
+    "k": "B",
+    "t": "错误"
+   }
+  ],
+  "ans": "B"
+ },
+ {
+  "id": 269,
+  "type": "judge",
+  "module": "企业温室气体核算指南",
+  "stem": "组织层面温室气体排放核算是依据一定方法和程序对碳排放量进行量化的过程，通常称为排放核算。（）",
+  "opts": [
+   {
+    "k": "A",
+    "t": "正确"
+   },
+   {
+    "k": "B",
+    "t": "错误"
+   }
+  ],
+  "ans": "A"
+ },
+ {
+  "id": 270,
+  "type": "judge",
+  "module": "企业温室气体核算指南",
+  "stem": "在无法获取实测数据的情况下，企业可自行设定排放因子数值，无需参考权威来源。（）",
+  "opts": [
+   {
+    "k": "A",
+    "t": "正确"
+   },
+   {
+    "k": "B",
+    "t": "错误"
+   }
+  ],
+  "ans": "B"
+ },
+ {
+  "id": 271,
+  "type": "judge",
+  "module": "企业温室气体核算指南",
+  "stem": "根据《企业温室气体排放核算与报告指南 发电设施》，核算边界为发电设施，主要包括燃烧系统、汽水系统、电气系统、控制系统和除尘及脱硫脱硝等装置的集合，也包括厂区内其他辅助生产系统以及附属生产系统（）。",
+  "opts": [
+   {
+    "k": "A",
+    "t": "正确"
+   },
+   {
+    "k": "B",
+    "t": "错误"
+   }
+  ],
+  "ans": "B"
+ },
+ {
+  "id": 272,
+  "type": "judge",
+  "module": "企业温室气体核算指南",
+  "stem": "企业可以通过以下方式确定非碳酸盐替代原料的种类：根据报告周期内非碳酸盐替代原料采购合同、结算凭证、支付记录、生料配料及消耗量记录等支撑材料来证实具体非碳酸盐替代原料种类。",
+  "opts": [
+   {
+    "k": "A",
+    "t": "正确"
+   },
+   {
+    "k": "B",
+    "t": "错误"
+   }
+  ],
+  "ans": "A"
+ },
+ {
+  "id": 273,
+  "type": "judge",
+  "module": "企业温室气体核算指南",
+  "stem": "根据《企业温室气体排放核算与报告指南 发电设施》，皮带秤须采用皮带秤实煤或循环链码校验每季度一次，或至少每年对皮带秤进行实煤计量比对（）。",
+  "opts": [
+   {
+    "k": "A",
+    "t": "正确"
+   },
+   {
+    "k": "B",
+    "t": "错误"
+   }
+  ],
+  "ans": "B"
+ },
+ {
+  "id": 274,
+  "type": "judge",
+  "module": "企业温室气体核算指南",
+  "stem": "根据《企业温室气体排放核算与报告指南 发电设施》，燃煤元素碳含量需在每次样品采集之后 15个自然日内完成检测，且检测报告应包含样品的元素碳含量、低位发热量等参数。（）",
+  "opts": [
+   {
+    "k": "A",
+    "t": "正确"
+   },
+   {
+    "k": "B",
+    "t": "错误"
+   }
+  ],
+  "ans": "B"
+ },
+ {
+  "id": 275,
+  "type": "judge",
+  "module": "企业温室气体核算指南",
+  "stem": "根据《企业温室气体排放核算与报告指南 铝冶炼行业》，固体燃料元素碳含量采样应与对应固体燃料消耗量状态一致，至少每月检测一次，可自行检测、委托外部有资质的检测机构/实验室进行检测或由供应商提供，检测应遵循 GB/T 476 等标准。（）",
+  "opts": [
+   {
+    "k": "A",
+    "t": "正确"
+   },
+   {
+    "k": "B",
+    "t": "错误"
+   }
+  ],
+  "ans": "A"
+ },
+ {
+  "id": 276,
+  "type": "judge",
+  "module": "企业温室气体核算指南",
+  "stem": "根据《企业温室气体排放核算与报告指南 发电设施》对数据质量控制计划的要求，当有数据缺失时，应采取的处理方式是：明确数据缺失处理方式，处理方式应基于审慎性原则且符合生态环境部相关规定。（）",
+  "opts": [
+   {
+    "k": "A",
+    "t": "正确"
+   },
+   {
+    "k": "B",
+    "t": "错误"
+   }
+  ],
+  "ans": "A"
+ },
+ {
+  "id": 277,
+  "type": "judge",
+  "module": "企业温室气体核算指南",
+  "stem": "我国水泥行业重点排放单位的温室气体排放核算与报告指南中的熟料过程排放因子是实时更新的（）。",
+  "opts": [
+   {
+    "k": "A",
+    "t": "正确"
+   },
+   {
+    "k": "B",
+    "t": "错误"
+   }
+  ],
+  "ans": "B"
+ },
+ {
+  "id": 278,
+  "type": "judge",
+  "module": "企业温室气体核算指南",
+  "stem": "钢铁行业重点排放单位的工序层级温室气体排放源中，焦化、烧结、球团、炼铁、转炉炼钢和电炉炼钢工序的排放源包括化石燃料净消耗所产生的二氧化碳排放，也包括点火助燃、运输设施使用的化石燃料排放。（）",
+  "opts": [
+   {
+    "k": "A",
+    "t": "正确"
+   },
+   {
+    "k": "B",
+    "t": "错误"
+   }
+  ],
+  "ans": "B"
+ },
+ {
+  "id": 279,
+  "type": "judge",
+  "module": "企业温室气体核算指南",
+  "stem": "根据《企业温室气体排放核算与报告指南 钢铁行业》对数据监测与获取的要求，炼钢工序含碳产品的输出量为粗钢产量，采用生产系统记录的直接计量数据；无直接计量数据时，可根据粗钢规格尺寸和密度，采用理论计算获取产量数据。（）",
+  "opts": [
+   {
+    "k": "A",
+    "t": "正确"
+   },
+   {
+    "k": "B",
+    "t": "错误"
+   }
+  ],
+  "ans": "A"
+ },
+ {
+  "id": 280,
+  "type": "judge",
+  "module": "企业温室气体核算指南",
+  "stem": "根据《企业温室气体排放核算与报告指南 钢铁行业》对数据监测与获取的要求，如有焦炉煤气生产甲醇等化工产品的，作为原料使用的焦炉煤气无需进行扣除。（）",
+  "opts": [
+   {
+    "k": "A",
+    "t": "正确"
+   },
+   {
+    "k": "B",
+    "t": "错误"
+   }
+  ],
+  "ans": "B"
+ },
+ {
+  "id": 281,
+  "type": "judge",
+  "module": "企业温室气体核算指南",
+  "stem": "根据《中国化工生产企业温室气体排放核算方法与报告指南》，化工生产企业的工业生产过程排放仅包括化石燃料作为原料使用的排放。（）",
+  "opts": [
+   {
+    "k": "A",
+    "t": "正确"
+   },
+   {
+    "k": "B",
+    "t": "错误"
+   }
+  ],
+  "ans": "B"
+ },
+ {
+  "id": 282,
+  "type": "judge",
+  "module": "企业温室气体核算指南",
+  "stem": "《中国化工生产企业温室气体排放核算方法与报告指南》对二氧化碳回收利用的定义为：由报告主体产生的、但又被回收作为原材料或外销产品从而避免排放到大气中的二氧化碳。",
+  "opts": [
+   {
+    "k": "A",
+    "t": "正确"
+   },
+   {
+    "k": "B",
+    "t": "错误"
+   }
+  ],
+  "ans": "A"
+ },
+ {
+  "id": 283,
+  "type": "judge",
+  "module": "企业温室气体核算指南",
+  "stem": "根据《中国陶瓷生产企业温室气体排放核算方法与报告指南》，工业生产过程排放主要指陶瓷原料中含有的方解石、菱镁矿和白云石等中的碳酸盐，在陶瓷烧成工序中高温下发生分解，释放出二氧化碳。（）",
+  "opts": [
+   {
+    "k": "A",
+    "t": "正确"
+   },
+   {
+    "k": "B",
+    "t": "错误"
+   }
+  ],
+  "ans": "A"
+ },
+ {
+  "id": 284,
+  "type": "judge",
+  "module": "企业温室气体核算指南",
+  "stem": "根据《中国平板玻璃生产企业温室气体排放核算方法与报告指南（试行）》，原料配料中碳粉氧化的排放可以用以下公式计算：报告期内碳粉燃烧产生的CO2排放量=原料配料中碳粉消耗量×碳粉含碳量的加权平均值。（）",
+  "opts": [
+   {
+    "k": "A",
+    "t": "正确"
+   },
+   {
+    "k": "B",
+    "t": "错误"
+   }
+  ],
+  "ans": "B"
+ },
+ {
+  "id": 285,
+  "type": "judge",
+  "module": "企业温室气体核算指南",
+  "stem": "根据《中国陆上交通运输企业温室气体排放核算方法与报告指南(试行)》，道路运输企业的温室气体排放核算仅需核算二氧化碳，无需考虑其他温室气体种类。（）",
+  "opts": [
+   {
+    "k": "A",
+    "t": "正确"
+   },
+   {
+    "k": "B",
+    "t": "错误"
+   }
+  ],
+  "ans": "B"
+ },
+ {
+  "id": 286,
+  "type": "judge",
+  "module": "企业温室气体核算指南",
+  "stem": "根据《中国石油化工企业温室气体排放核算方法与报告指南（试行）》，石油化工企业的温室气体排放核算边界仅以独立法人企业核算单位为边界。（）",
+  "opts": [
+   {
+    "k": "A",
+    "t": "正确"
+   },
+   {
+    "k": "B",
+    "t": "错误"
+   }
+  ],
+  "ans": "B"
+ },
+ {
+  "id": 287,
+  "type": "judge",
+  "module": "企业温室气体核算指南",
+  "stem": "根据《企业温室气体排放核算与报告指南 水泥行业》，重点排放单位应按照指南的排放报告存证要求开展熟料生产关键参数月度信息化存证，应在每月结束后的 30 个自然日内上传至全国碳市场管理平台。",
+  "opts": [
+   {
+    "k": "A",
+    "t": "正确"
+   },
+   {
+    "k": "B",
+    "t": "错误"
+   }
+  ],
+  "ans": "B"
+ },
+ {
+  "id": 288,
+  "type": "judge",
+  "module": "组织核算与ISO 14064-1",
+  "stem": "根据ISO 14064-1，组织在设定碳减排目标时，只需考虑本组织内部因素，无需关注供应链上下游的影响。（）",
+  "opts": [
+   {
+    "k": "A",
+    "t": "正确"
+   },
+   {
+    "k": "B",
+    "t": "错误"
+   }
+  ],
+  "ans": "B"
+ },
+ {
+  "id": 289,
+  "type": "judge",
+  "module": "组织核算与ISO 14064-1",
+  "stem": "按照ISO 14064-1，企业公布GHG减排目标时，需要明确表述目标的起止时间，包括基准年和计划完成年。（）",
+  "opts": [
+   {
+    "k": "A",
+    "t": "正确"
+   },
+   {
+    "k": "B",
+    "t": "错误"
+   }
+  ],
+  "ans": "A"
+ },
+ {
+  "id": 290,
+  "type": "judge",
+  "module": "组织核算与ISO 14064-1",
+  "stem": "组织在选取排放因子时，国家排放因子的优先级高于区域排放因子。（）",
+  "opts": [
+   {
+    "k": "A",
+    "t": "正确"
+   },
+   {
+    "k": "B",
+    "t": "错误"
+   }
+  ],
+  "ans": "B"
+ },
+ {
+  "id": 291,
+  "type": "judge",
+  "module": "产品碳足迹GB/T 24067",
+  "stem": "产品碳足迹仅指产品系统中的GHG排放，以二氧化碳当量表示，其GHG清除量不被计算在碳足迹中。（）",
+  "opts": [
+   {
+    "k": "A",
+    "t": "正确"
+   },
+   {
+    "k": "B",
+    "t": "错误"
+   }
+  ],
+  "ans": "B"
+ },
+ {
+  "id": 292,
+  "type": "judge",
+  "module": "产品碳足迹GB/T 24067",
+  "stem": "产品碳足迹计算仅需要考虑直接排放，无需考虑原材料生产和运输等间接排放。（）",
+  "opts": [
+   {
+    "k": "A",
+    "t": "正确"
+   },
+   {
+    "k": "B",
+    "t": "错误"
+   }
+  ],
+  "ans": "B"
+ },
+ {
+  "id": 293,
+  "type": "judge",
+  "module": "产品碳足迹GB/T 24067",
+  "stem": "GB/T 24067-2024《温室气体 产品碳足迹量化要求和指南》的出台对具体产品碳足迹核算标准的编制没什么作用。（）",
+  "opts": [
+   {
+    "k": "A",
+    "t": "正确"
+   },
+   {
+    "k": "B",
+    "t": "错误"
+   }
+  ],
+  "ans": "B"
+ },
+ {
+  "id": 294,
+  "type": "judge",
+  "module": "产品碳足迹GB/T 24067",
+  "stem": "GB/T 24067-2024规定，在产品碳足迹或产品部分碳足迹的最化中不允许进行碳抵消，碳抵消的信息交流不属于本文件的范围。（）",
+  "opts": [
+   {
+    "k": "A",
+    "t": "正确"
+   },
+   {
+    "k": "B",
+    "t": "错误"
+   }
+  ],
+  "ans": "A"
+ },
+ {
+  "id": 295,
+  "type": "judge",
+  "module": "产品碳足迹GB/T 24067",
+  "stem": "在产品碳足迹评价中，产品碳足迹相关数据收集的优先级排序是先初级数据，后次级数据。（）",
+  "opts": [
+   {
+    "k": "A",
+    "t": "正确"
+   },
+   {
+    "k": "B",
+    "t": "错误"
+   }
+  ],
+  "ans": "A"
+ },
+ {
+  "id": 296,
+  "type": "judge",
+  "module": "产品碳足迹GB/T 24067",
+  "stem": "GB/T 24067-2024《温室气体 产品碳足迹量化要求和指南》不仅评价产品碳足迹，还评估产品生命周期中的水资源消耗和生态毒性影响。（）",
+  "opts": [
+   {
+    "k": "A",
+    "t": "正确"
+   },
+   {
+    "k": "B",
+    "t": "错误"
+   }
+  ],
+  "ans": "B"
+ },
+ {
+  "id": 297,
+  "type": "judge",
+  "module": "产品碳足迹GB/T 24067",
+  "stem": "GB/T 24067-2024对产品部分碳足迹的定义为产品系统全生命周期内所有阶段的温室气体排放总量，不包括清除量。（）",
+  "opts": [
+   {
+    "k": "A",
+    "t": "正确"
+   },
+   {
+    "k": "B",
+    "t": "错误"
+   }
+  ],
+  "ans": "B"
+ },
+ {
+  "id": 298,
+  "type": "judge",
+  "module": "产品碳足迹GB/T 24067",
+  "stem": "产品类别规则是用于制定一个或多个产品种类的Ⅱ型环境声明和足迹信息交流的一套具体规则、要求和指南。（）",
+  "opts": [
+   {
+    "k": "A",
+    "t": "正确"
+   },
+   {
+    "k": "B",
+    "t": "错误"
+   }
+  ],
+  "ans": "B"
+ },
+ {
+  "id": 299,
+  "type": "judge",
+  "module": "碳足迹标识认证试点",
+  "stem": "市场监管总局等部门关于开展产品碳足迹标识认证试点工作的通知中的试点对象是锂电池、光伏产品、钢铁、纺织品、电子电器、水泥、电解铝。",
+  "opts": [
+   {
+    "k": "A",
+    "t": "正确"
+   },
+   {
+    "k": "B",
+    "t": "错误"
+   }
+  ],
+  "ans": "B"
+ },
+ {
+  "id": 300,
+  "type": "judge",
+  "module": "双碳政策与国际法规",
+  "stem": "国家发展改革委等三部门发布的《关于进一步强化碳达峰碳中和标准计量体系建设行动方案（2024—2025年）》的原则是系统推进、急用先行、开放协同。（）",
+  "opts": [
+   {
+    "k": "A",
+    "t": "正确"
+   },
+   {
+    "k": "B",
+    "t": "错误"
+   }
+  ],
+  "ans": "A"
+ }
+];
+const Q = {};
+DATA.forEach(function(q){ Q[q.id] = q; });
+
+/* ===== 存储层 ===== */
+let store = { fav: [], examWrong: [], history: [], practice: null, daily: {} };
+function load(){
+  try{
+    const s = JSON.parse(localStorage.getItem("myQuizV2") || "{}");
+    store = Object.assign(store, s);
+  }catch(e){}
+}
+function save(){ try{ localStorage.setItem("myQuizV2", JSON.stringify(store)); }catch(e){} }
+load();
+
+/* ===== 全局状态 ===== */
+let view = "home";
+let mode = "order";        // order / random / viewall / fav
+let typeFilter = null;
+let queue = [];
+let idx = 0, picked = [], done = false;
+let practiceRes = {};
+let examQueue = [], examPicks = {}, examIdx = 0, examStart = 0, timerId = null;
+let examResult = null, examPaperRecord = null, examPaperBack = "exam";
+
+/* ===== 工具函数 ===== */
+function esc(s){ return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+function fmtTime(s){ return Math.floor(s / 60) + "分" + (s % 60) + "秒"; }
+function fmtClock(s){ return String(Math.floor(s / 60)).padStart(2, "0") + ":" + String(s % 60).padStart(2, "0"); }
+function fmtDate(d){
+  return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" +
+         String(d.getDate()).padStart(2, "0") + " " +
+         String(d.getHours()).padStart(2, "0") + ":" + String(d.getMinutes()).padStart(2, "0");
+}
+function fmtDateKey(d){
+  return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" +
+         String(d.getDate()).padStart(2, "0");
+}
+function shuffle(a){ const b = a.slice(); for(let i = b.length - 1; i > 0; i--){ const j = Math.floor(Math.random() * (i + 1)); const t = b[i]; b[i] = b[j]; b[j] = t; } return b; }
+function allIds(){ return DATA.map(function(q){ return q.id; }); }
+function typeName(q){ return q.type === "multi" ? "多选题" : q.type === "judge" ? "判断题" : "单选题"; }
+function isFav(id){ return store.fav.indexOf(id) >= 0; }
+function toggleFav(id){
+  const i = store.fav.indexOf(id);
+  if(i >= 0) store.fav.splice(i, 1); else store.fav.push(id);
+  save();
+}
+/* 今日进度：只统计顺序练习/随机练习（收藏刷题、模拟考试不计入） */
+function recordDaily(ok){
+  if(!store.daily) store.daily = {};
+  const key = fmtDateKey(new Date());
+  const day = store.daily[key] || { count: 0, right: 0, wrong: 0 };
+  day.count++;
+  if(ok) day.right++; else day.wrong++;
+  store.daily[key] = day;
+  save();
+}
+function todayStats(){
+  const day = (store.daily || {})[fmtDateKey(new Date())];
+  return day || { count: 0, right: 0, wrong: 0 };
+}
+/* 判分：多选必须全选对才算对 */
+function checkAnswer(q){
+  if(q.type === "multi"){
+    if(picked.length !== q.ans.length) return false;
+    return q.ans.split("").every(function(x){ return picked.indexOf(x) >= 0; });
+  }
+  return picked[0] === q.ans;
+}
+function examCheck(q, sel){
+  if(!sel) return false;
+  if(q.type === "multi"){
+    if(sel.length !== q.ans.length) return false;
+    return q.ans.split("").every(function(x){ return sel.indexOf(x) >= 0; });
+  }
+  return sel === q.ans;
+}
+
+/* ===== 进度保存 ===== */
+function savePractice(){
+  if(mode === "fav") return;   // 收藏刷题不覆盖练习进度
+  if(view === "quiz" || view === "list"){
+    store.practice = { mode: mode, type: typeFilter, queue: queue, idx: idx, practiceRes: practiceRes };
+    save();
+  }
+}
+
+/* ===== 页面切换 ===== */
+function go(name){
+  if(name !== "examRun" && timerId){ clearInterval(timerId); timerId = null; }
+  view = name;
+  render();
+  window.scrollTo(0, 0);
+}
+
+/* ===== 渲染总入口 ===== */
+function render(){
+  const v = document.getElementById("view");
+  const hs = document.getElementById("headerSub");
+  if(view === "home"){ hs.textContent = "碳汇题库 300 题"; v.innerHTML = homeHTML(); }
+  else if(view === "pickType"){ hs.textContent = "顺序练习"; v.innerHTML = pickTypeHTML(); }
+  else if(view === "quiz"){ hs.textContent = mode === "random" ? "随机练习" : mode === "fav" ? "收藏刷题" : "练习"; v.innerHTML = quizHTML(); }
+  else if(view === "viewall"){ hs.textContent = "顺序看题"; v.innerHTML = viewallHTML(); }
+  else if(view === "list"){ hs.textContent = "答题卡"; v.innerHTML = listHTML(); }
+  else if(view === "fav"){ hs.textContent = "我的收藏"; v.innerHTML = favHTML(); }
+  else if(view === "exam"){ hs.textContent = "模拟考试"; v.innerHTML = examHTML(); }
+  else if(view === "createExam"){ hs.textContent = "创建试卷"; v.innerHTML = createExamHTML(); }
+  else if(view === "examRun"){ hs.textContent = "模拟考试"; v.innerHTML = examRunHTML(); }
+  else if(view === "examResult"){ hs.textContent = "考试结果"; v.innerHTML = examResultHTML(); }
+  else if(view === "examWrong"){ hs.textContent = "我的错题"; v.innerHTML = examWrongHTML(); }
+  else if(view === "examPaper"){ hs.textContent = "查看试卷"; v.innerHTML = examPaperHTML(); }
+  document.querySelectorAll("nav button").forEach(function(b){
+    b.classList.toggle("active", b.dataset.nav === view);
+  });
+  savePractice();
+}
+
+/* ===== 首页 ===== */
+function homeHTML(){
+  const t = todayStats();
+  const pct = t.count ? Math.round(t.right / t.count * 100) : 0;
+  return [
+    '<h1 class="page-title">碳汇刷题</h1>',
+    '<p class="subtitle">共 ' + DATA.length + ' 题 · 收藏 ' + store.fav.length + ' · 考试 ' + store.history.length + ' 次</p>',
+    '<div class="card">',
+      '<div class="sec-t">今日刷题进度</div>',
+      '<div class="today-grid">',
+        '<div class="today-cell"><div class="num">' + t.count + '</div><div class="lab">已刷（题）</div></div>',
+        '<div class="today-cell"><div class="num">' + pct + '%</div><div class="lab">正确率</div></div>',
+        '<div class="today-cell"><div class="num red">' + t.wrong + '</div><div class="lab">错题（题）</div></div>',
+      '</div>',
+    '</div>',
+    '<div class="entries">',
+      '<button class="entry" onclick="go(\'pickType\')"><div class="e-t">顺序练习</div><div class="e-d">按题型逐题练</div></button>',
+      '<button class="entry" onclick="startRandom()"><div class="e-t">随机练习</div><div class="e-d">打乱顺序全刷</div></button>',
+      '<button class="entry" onclick="startViewAll()"><div class="e-t">顺序看题</div><div class="e-d">带答案浏览</div></button>',
+      '<button class="entry" onclick="go(\'exam\')"><div class="e-t">模拟考试</div><div class="e-d">历史成绩 · 组卷</div></button>',
+    '</div>',
+  ].join("");
+}
+
+/* ===== 顺序练习 ===== */
+function pickTypeHTML(){
+  const single = DATA.filter(function(q){ return q.type === "single"; }).length;
+  const multi  = DATA.filter(function(q){ return q.type === "multi"; }).length;
+  const judge  = DATA.filter(function(q){ return q.type === "judge"; }).length;
+  return [
+    '<h1 class="page-title">顺序练习</h1>',
+    '<p class="subtitle">选择要练习的题型</p>',
+    '<div class="card"><div class="sec-t">题型选择</div>',
+      '<button class="list-item" onclick="startOrder(\'single\')"><span class="no">单</span><span class="txt">单选题</span><span class="muted">' + single + ' 题</span></button>',
+      '<button class="list-item" onclick="startOrder(\'multi\')"><span class="no">多</span><span class="txt">多选题</span><span class="muted">' + multi + ' 题</span></button>',
+      '<button class="list-item" onclick="startOrder(\'judge\')"><span class="no">判</span><span class="txt">判断题</span><span class="muted">' + judge + ' 题</span></button>',
+    '</div>',
+    '<button class="back-btn" onclick="go(\'home\')">返回首页</button>',
+  ].join("");
+}
+function startOrder(type){
+  const p = store.practice;
+  if(p && p.mode === "order" && p.type === type){
+    mode = "order"; typeFilter = type;
+    queue = p.queue;
+    practiceRes = p.practiceRes || {};
+    idx = p.idx; picked = []; done = false;
+    view = "quiz"; render(); window.scrollTo(0, 0);
+    return;
+  }
+  mode = "order"; typeFilter = type;
+  queue = DATA.filter(function(q){ return q.type === type; }).map(function(q){ return q.id; });
+  practiceRes = {};
+  idx = 0; picked = []; done = false;
+  view = "quiz"; render(); window.scrollTo(0, 0);
+}
+
+/* ===== 随机练习 ===== */
+function startRandom(){
+  const p = store.practice;
+  if(p && p.mode === "random"){
+    mode = "random"; typeFilter = null;
+    queue = p.queue;
+    practiceRes = p.practiceRes || {};
+    idx = p.idx; picked = []; done = false;
+    view = "quiz"; render(); window.scrollTo(0, 0);
+    return;
+  }
+  mode = "random"; typeFilter = null;
+  queue = shuffle(allIds());
+  practiceRes = {};
+  idx = 0; picked = []; done = false;
+  view = "quiz"; render(); window.scrollTo(0, 0);
+}
+
+/* ===== 顺序看题 ===== */
+function startViewAll(){
+  mode = "viewall";
+  queue = allIds();
+  idx = 0;
+  view = "viewall"; render(); window.scrollTo(0, 0);
+}
+function viewallHTML(){
+  const q = Q[queue[idx]];
+  const total = queue.length, cur = idx + 1;
+  const opts = q.opts.map(function(o){
+    const right = q.ans.indexOf(o.k) >= 0;
+    return '<button class="opt dis' + (right ? " right" : "") + '"><span class="k">' + o.k + '</span><span>' + esc(o.t) + '</span></button>';
+  }).join("");
+  return [
+    '<div class="toolbar">',
+      '<button onclick="goBackFirst()">全部重做</button>',
+      '<button class="' + (isFav(q.id) ? "on" : "") + '" onclick="toggleFav(' + q.id + ');render()">' + (isFav(q.id) ? "已收藏" : "收藏") + '</button>',
+      '<button onclick="openList()">答题卡</button>',
+    '</div>',
+    '<div class="card">',
+      '<div class="q-head"><span class="badge">' + typeName(q) + '</span>' +
+        '<span class="badge">' + esc(q.module) + '</span>' +
+        '<span class="q-progress">' + cur + ' / ' + total + '</span></div>',
+      '<div class="q-stem">' + esc(q.stem) + '</div>',
+      '<div>' + opts + '</div>',
+      '<div class="feedback ok">正确答案：' + q.ans + '</div>',
+      '<div class="q-actions">' +
+        (idx > 0 ? '<button class="btn ghost" onclick="viewNav(-1)">上一题</button>' : '') +
+        (idx < total - 1 ? '<button class="btn pri" onclick="viewNav(1)">下一题</button>' : '<button class="btn pri" onclick="goBackFirst()">从头再看</button>') +
+      '</div>',
+    '</div>',
+  ].join("");
+}
+function viewNav(d){ idx += d; render(); window.scrollTo(0, 0); }
+function goBackFirst(){ idx = 0; render(); window.scrollTo(0, 0); }
+
+/* ===== 刷题页 ===== */
+function quizHTML(){
+  const q = Q[queue[idx]];
+  if(!q) return '<div class="card"><div class="empty">题目加载失败</div></div>';
+  const total = queue.length, cur = idx + 1;
+  const rec = practiceRes[q.id];               // 已做题记录 { ok, sel }
+  const isDone = done || rec !== undefined;    // 此题是否已做
+  const mySel = (rec && rec.sel) ? rec.sel.split("") : picked;  // 已做→回显当时选择
+  const ok = isDone ? ((rec === true) || (rec && rec.ok)) : null;
+  const favBtn = (mode === "fav")
+    ? '<button onclick="toggleFav(' + q.id + ');render()">取消收藏</button>'
+    : '<button class="' + (isFav(q.id) ? "on" : "") + '" onclick="toggleFav(' + q.id + ');render()">' + (isFav(q.id) ? "已收藏" : "收藏") + '</button>';
+  const opts = q.opts.map(function(o){
+    let cls = "";
+    if(!isDone){
+      if(q.type === "multi" && mySel.indexOf(o.k) >= 0) cls = " sel";
+    } else {
+      cls = " dis";
+      if(q.ans.indexOf(o.k) >= 0) cls += " right";
+      else if(mySel.indexOf(o.k) >= 0) cls += " wrong";
+    }
+    return '<button class="opt' + cls + '" onclick="pick(\'' + o.k + '\')">' +
+           '<span class="k">' + o.k + '</span><span>' + esc(o.t) + '</span></button>';
+  }).join("");
+  let feedback = "";
+  if(isDone){
+    feedback = '<div class="feedback ' + (ok ? "ok" : "no") + '">' +
+               (ok ? "回答正确" : "回答错误，正确答案是 " + q.ans) + '</div>';
+  }
+  const submitBtn = (!isDone && q.type === "multi")
+    ? '<button class="btn pri" onclick="submitMulti()">提交答案</button>' : "";
+  const nextBtn = isDone ? '<button class="btn pri" onclick="nextQ()">下一题</button>' : "";
+  return [
+    '<div class="toolbar">',
+      '<button onclick="redoAll()">全部重做</button>',
+      favBtn,
+      '<button onclick="openList()">答题卡</button>',
+    '</div>',
+    '<div class="card">',
+      '<div class="q-head">',
+        '<span class="badge">' + typeName(q) + '</span>',
+        '<span class="badge">' + esc(q.module) + '</span>',
+        '<span class="q-progress">' + cur + ' / ' + total + '</span>',
+      '</div>',
+      '<div class="q-stem">' + esc(q.stem) + '</div>',
+      '<div>' + opts + '</div>',
+      feedback,
+      '<div class="q-actions">' + submitBtn + nextBtn + '</div>',
+    '</div>',
+  ].join("");
+}
+function pick(k){
+  const q = Q[queue[idx]];
+  if(done || practiceRes[q.id] !== undefined) return;   // 已做题不再重复判分
+  if(q.type === "multi"){
+    const i = picked.indexOf(k);
+    if(i >= 0) picked.splice(i, 1); else picked.push(k);
+    render(); return;
+  }
+  picked = [k]; done = true;
+  const ok = (k === q.ans);
+  practiceRes[q.id] = { ok: ok, sel: k };              // 存对错 + 选的答案
+  if(mode !== "fav") recordDaily(ok);
+  render();
+}
+function submitMulti(){
+  const q = Q[queue[idx]];
+  if(done || practiceRes[q.id] !== undefined) return;
+  if(!picked.length){ alert("请先选择答案"); return; }
+  done = true;
+  const ok = checkAnswer(q);
+  practiceRes[q.id] = { ok: ok, sel: picked.slice().join("") };
+  if(mode !== "fav") recordDaily(ok);
+  render();
+}
+function nextQ(){
+  if(idx < queue.length - 1){ idx++; picked = []; done = false; render(); window.scrollTo(0, 0); }
+  else alert("本组题目已刷完！");
+}
+function redoAll(){
+  idx = 0; picked = []; done = false; practiceRes = {};
+  render(); window.scrollTo(0, 0);
+}
+
+/* ===== 答题卡 ===== */
+function openList(){ view = "list"; render(); window.scrollTo(0, 0); }
+function listHTML(){
+  const items = queue.map(function(id, i){
+    let cls = "";
+    if(practiceRes[id] !== undefined){
+      const rec = practiceRes[id];
+      cls = ((rec === true) || (rec && rec.ok)) ? " ok" : " no";
+    }
+    return '<button class="' + cls + '" onclick="jumpFromList(' + i + ')">' + (i + 1) + '</button>';
+  }).join("");
+  return '<div class="card"><div class="sec-t">答题卡<span class="muted">（共 ' + queue.length + ' 题）</span></div>' +
+         '<div class="answer-grid">' + items + '</div>' +
+         '<button class="back-btn" style="margin-top:10px;" onclick="backToList()">返回</button></div>';
+}
+function jumpFromList(i){
+  idx = i; picked = []; done = false;
+  view = (mode === "viewall") ? "viewall" : "quiz";
+  render(); window.scrollTo(0, 0);
+}
+function backToList(){
+  view = (mode === "viewall") ? "viewall" : "quiz";
+  render(); window.scrollTo(0, 0);
+}
+
+/* ===== 收藏页 ===== */
+function favHTML(){
+  const list = store.fav;
+  if(!list.length){
+    return '<div class="card"><div class="empty">还没有收藏题目<br>刷题或看题时点"收藏"按钮即可收录</div></div>';
+  }
+  const items = list.map(function(id, i){
+    const q = Q[id];
+    return '<div class="fav-item" onclick="startFav(' + i + ')">' +
+      '<div class="fav-no">' + (i + 1) + '</div>' +
+      '<div class="fav-main">' +
+        '<div class="fav-head"><span class="badge">' + typeName(q) + '</span><span class="badge">' + esc(q.module) + '</span></div>' +
+        '<div class="fav-stem">' + esc(q.stem) + '</div>' +
+      '</div>' +
+      '<button class="clear-btn" onclick="event.stopPropagation();removeFav(' + i + ')">取消收藏</button>' +
+    '</div>';
+  }).join("");
+  return '<h1 class="page-title">我的收藏</h1>' +
+    '<p class="subtitle">共 ' + list.length + ' 题 · 点击题目开始刷</p>' + items;
+}
+function startFav(i){
+  mode = "fav";
+  queue = store.fav.slice();
+  practiceRes = {};
+  idx = i; picked = []; done = false;
+  view = "quiz"; render(); window.scrollTo(0, 0);
+}
+function removeFav(i){
+  store.fav.splice(i, 1);
+  save(); render();
+}
+
+/* ===== 模拟考试：考试中心 ===== */
+function examHTML(){
+  const hist = store.history;
+  let list = "";
+  if(!hist.length){
+    list = '<div class="empty">暂无考试记录<br>点击下方"创建试卷"开始第一次模拟考试</div>';
+  } else {
+    list = hist.map(function(r, i){
+      const pct = Math.round(r.correct / r.total * 100);
+      return '<div class="hist-item">' +
+        '<div class="hist-main">' +
+          '<div class="hist-row"><span class="hist-date">' + r.date + '</span><span class="hist-pct">正确率 ' + pct + '%</span></div>' +
+          '<div class="hist-row muted">答对 ' + r.correct + ' / 共 ' + r.total + ' 题 · 用时 ' + fmtTime(r.used) + '</div>' +
+        '</div>' +
+        '<button class="hist-view" onclick="viewPaper(' + i + ')">查看试卷</button>' +
+      '</div>';
+    }).join("");
+  }
+  return '<h1 class="page-title">模拟考试</h1>' +
+    '<p class="subtitle">近 30 次历史成绩</p>' +
+    '<div class="card" style="padding:12px;"><div class="sec-t">历史成绩</div>' + list + '</div>' +
+    '<div class="q-actions">' +
+      '<button class="btn ghost" onclick="go(\'examWrong\')">我的错题（' + store.examWrong.length + '）</button>' +
+      '<button class="btn pri" onclick="go(\'createExam\')">创建试卷</button>' +
+    '</div>';
+}
+
+/* 创建试卷 */
+function createExamHTML(){
+  const opts = [10, 30, 50, 100].map(function(n){
+    return '<button class="list-item" onclick="startExam(' + n + ')"><span class="no">' + n + '</span><span class="txt">' + n + ' 题</span><span class="muted">随机组卷</span></button>';
+  }).join("");
+  return '<h1 class="page-title">创建试卷</h1>' +
+    '<p class="subtitle">随机抽取题目组成一套模拟试卷</p>' +
+    '<div class="card"><div class="sec-t">题目数量</div>' + opts + '</div>' +
+    '<button class="back-btn" onclick="go(\'exam\')">返回考试中心</button>';
+}
+function startExam(n){
+  examQueue = shuffle(allIds()).slice(0, n);
+  examPicks = {}; examIdx = 0;
+  examStart = Date.now();
+  if(timerId) clearInterval(timerId);
+  view = "examRun"; render();
+  timerId = setInterval(updateTimer, 1000);
+  window.scrollTo(0, 0);
+}
+function updateTimer(){
+  const el = document.getElementById("timerText");
+  if(el) el.textContent = fmtClock(Math.floor((Date.now() - examStart) / 1000));
+}
+
+/* 考试运行 */
+function examRunHTML(){
+  const q = Q[examQueue[examIdx]];
+  const total = examQueue.length, cur = examIdx + 1;
+  const sel = examPicks[q.id] || "";
+  const opts = q.opts.map(function(o){
+    const cls = (sel.indexOf(o.k) >= 0) ? " sel" : "";
+    return '<button class="opt' + cls + '" onclick="examPick(\'' + o.k + '\')">' +
+           '<span class="k">' + o.k + '</span><span>' + esc(o.t) + '</span></button>';
+  }).join("");
+  return [
+    '<div class="card">',
+      '<div class="q-head"><span class="badge">' + typeName(q) + '</span>' +
+        '<span class="q-progress">' + cur + ' / ' + total + '</span></div>',
+      '<div class="q-head" style="margin-top:-6px;">' +
+        '<span class="timer" id="timerText">' + fmtClock(Math.floor((Date.now() - examStart) / 1000)) + '</span>' +
+        '<span class="muted">已答 ' + Object.keys(examPicks).length + ' 题</span>' +
+        '<button class="hist-view" style="margin-left:auto;" onclick="submitExam()">交卷</button>' +
+      '</div>',
+      '<div class="q-stem">' + esc(q.stem) + '</div>',
+      '<div>' + opts + '</div>',
+      '<div class="q-actions">' +
+        (examIdx > 0 ? '<button class="btn ghost" onclick="examNav(-1)">上一题</button>' : '') +
+        '<button class="btn pri" onclick="examNav(1)">下一题</button>' +
+      '</div>',
+    '</div>',
+  ].join("");
+}
+function examPick(k){
+  const q = Q[examQueue[examIdx]];
+  const id = q.id;
+  let cur = examPicks[id] || "";
+  if(q.type === "multi"){
+    const i = cur.indexOf(k);
+    if(i >= 0) cur = cur.replace(k, ""); else cur += k;
+  } else {
+    cur = k;
+  }
+  examPicks[id] = cur;
+  render();
+}
+function examNav(d){ examIdx += d; render(); window.scrollTo(0, 0); }
+function submitExam(){
+  if(!confirm("确认交卷？")) return;
+  clearInterval(timerId); timerId = null;
+  let correct = 0; const wrong = [];
+  examQueue.forEach(function(id){
+    if(examCheck(Q[id], examPicks[id] || "")) correct++;
+    else wrong.push(id);
+  });
+  const used = Math.floor((Date.now() - examStart) / 1000);
+  const rec = { date: fmtDate(new Date()), total: examQueue.length, correct: correct,
+                used: used, wrong: wrong, questions: examQueue.slice() };
+  store.history.unshift(rec);
+  if(store.history.length > 30) store.history = store.history.slice(0, 30);
+  wrong.forEach(function(id){ if(store.examWrong.indexOf(id) < 0) store.examWrong.push(id); });
+  save();
+  examResult = rec;
+  view = "examResult"; render(); window.scrollTo(0, 0);
+}
+
+/* 考试结果 */
+function examResultHTML(){
+  const r = examResult;
+  const pct = Math.round(r.correct / r.total * 100);
+  return '<div class="card"><div class="result-box">' +
+    '<div class="result-num">' + pct + '<span class="sub">%</span></div>' +
+    '<div class="result-line">答对 ' + r.correct + ' / ' + r.total + ' 题 · 用时 ' + fmtTime(r.used) + '</div>' +
+    '<div class="result-line muted">' + r.date + '</div>' +
+  '</div></div>' +
+  '<div class="q-actions">' +
+    '<button class="btn ghost" onclick="viewResultPaper()">查看本次试卷</button>' +
+    '<button class="btn pri" onclick="go(\'exam\')">返回考试中心</button>' +
+  '</div>';
+}
+function viewResultPaper(){ examPaperRecord = examResult; examPaperBack = "examResult"; view = "examPaper"; render(); window.scrollTo(0, 0); }
+
+/* 查看试卷（只读） */
+function viewPaper(i){ examPaperRecord = store.history[i]; examPaperBack = "exam"; view = "examPaper"; render(); window.scrollTo(0, 0); }
+function examPaperHTML(){
+  const r = examPaperRecord;
+  const items = r.questions.map(function(id, i){
+    const q = Q[id];
+    const wrong = r.wrong.indexOf(id) >= 0;
+    const opts = q.opts.map(function(o){
+      const right = q.ans.indexOf(o.k) >= 0;
+      return '<button class="opt dis' + (right ? " right" : "") + '"><span class="k">' + o.k + '</span><span>' + esc(o.t) + '</span></button>';
+    }).join("");
+    return '<div class="card" style="margin-bottom:10px;">' +
+      '<div class="q-head"><span class="badge">第 ' + (i + 1) + ' 题</span><span class="badge">' + typeName(q) + '</span>' +
+      (wrong ? '<span class="badge judge">答错</span>' : '<span class="badge">答对</span>') + '</div>' +
+      '<div class="q-stem">' + esc(q.stem) + '</div>' +
+      '<div>' + opts + '</div>' +
+      '<div class="feedback ok">正确答案：' + q.ans + '</div>' +
+    '</div>';
+  }).join("");
+  return '<div class="card"><div class="sec-t">考试试卷<span class="muted">' + r.date + ' · 得分 ' + r.correct + '/' + r.total + '</span></div></div>' +
+    items +
+    '<button class="back-btn" onclick="go(\'' + examPaperBack + '\')">返回</button>';
+}
+
+/* 我的错题 */
+function examWrongHTML(){
+  const list = store.examWrong;
+  if(!list.length){
+    return '<div class="card"><div class="empty">暂无错题<br>模拟考试答错的题会收录在这里</div></div>' +
+           '<button class="back-btn" onclick="go(\'exam\')">返回考试中心</button>';
+  }
+  const items = list.map(function(id, i){
+    const q = Q[id];
+    const opts = q.opts.map(function(o){
+      const right = q.ans.indexOf(o.k) >= 0;
+      return '<button class="opt dis' + (right ? " right" : "") + '"><span class="k">' + o.k + '</span><span>' + esc(o.t) + '</span></button>';
+    }).join("");
+    return '<div class="wrong-item">' +
+      '<div class="wrong-head"><span class="badge">错题 ' + (i + 1) + '</span>' +
+      '<button class="clear-btn" onclick="clearOneWrong(' + i + ')">清除本题</button></div>' +
+      '<div class="wrong-stem">' + esc(q.stem) + '</div>' +
+      '<div>' + opts + '</div>' +
+      '<div class="feedback ok">正确答案：' + q.ans + '</div>' +
+    '</div>';
+  }).join("");
+  return '<div class="card"><div class="sec-t">我的错题<span class="muted">（共 ' + list.length + ' 题）</span>' +
+    '<button class="clear-btn" onclick="clearAllWrong()">全部清除</button></div></div>' + items +
+    '<button class="back-btn" onclick="go(\'exam\')">返回考试中心</button>';
+}
+function clearOneWrong(i){
+  store.examWrong.splice(i, 1);
+  save(); render();
+}
+function clearAllWrong(){
+  if(!confirm("确认清空全部错题？")) return;
+  store.examWrong = [];
+  save(); render();
+}
+
+render();
+</script>
+</body>
+</html>
